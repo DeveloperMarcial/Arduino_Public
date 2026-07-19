@@ -1,4 +1,47 @@
-# Portenta H7 Remote ESP32 Programmer
+# FlashBridge H7: AES-Secured Network-to-Silicon ESP32 Programming
+
+*Securely Upload, Resume, Flash, and Verify.*
+
+> **Security status:** AES encryption is planned. The current implementation
+> uses HTTP for transport, SHA-256 to verify staged images, and MD5 readback to
+> verify flashed images.
+
+## Use Cases
+
+### Remote Firmware Deployment
+
+Upload new ESP32 bootloader, partition, and application images over Ethernet or
+WiFi. The Portenta stages the images, programs the target through UART, and
+verifies what landed in flash without requiring a direct PC-to-ESP32 cable.
+
+### Interrupted Upload Recovery
+
+Resume a deployment after a network interruption or uploader restart. FlashBridge
+queries the received-chunk maps and transfers only missing chunks instead of
+starting the entire upload again.
+
+### Verified Production Programming
+
+Program ESP32 devices during assembly, repair, or field service with SHA-256
+staging checks and post-flash MD5 readback instead of relying on a
+fire-and-forget write.
+
+### Remote Labs and Classrooms
+
+Keep a Portenta and ESP32 connected in a shared lab so students and distributed
+teams can upload and test firmware without repeatedly rewiring or physically
+accessing the boards.
+
+### Hardware-Free Evaluation
+
+Run the included PC simulator with the unchanged uploader to demonstrate
+sessions, chunk validation, interruption, resume, flash offsets, progress, and
+digest verification without owning a Portenta H7 or ESP32.
+
+### Future AES-Protected Deployment
+
+Add AES encryption to protect proprietary firmware in transit while retaining
+resumable uploads, staged-image validation, and post-flash verification.
 
 ## What It Does
 
