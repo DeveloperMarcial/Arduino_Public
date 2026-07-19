@@ -8,10 +8,12 @@ than raw local Codex storage, which may contain private paths or unrelated data.
 - Project: Portenta H7 Remote ESP32 Programmer
 - Contest package: BuildWeek 20260721
 - GitHub repository: https://github.com/DeveloperMarcial/Arduino_Public
-- Codex session ID: TODO
+- Codex session ID: 019f7752-0784-7833-8840-bfb70bf66fec
 - Approved Codex share or transcript URL: TODO
-- Session date or date range: TODO
-- Codex product and model shown in the session UI: TODO
+- Session date or date range: Started July 18, 2026
+- Codex product and model shown in the session UI: Codex VS Code extension;
+  model label requires confirmation from the session UI
+- Codex client version recorded in session metadata: 0.144.0-alpha.4
 - Human contributor: Dev Marcial
 
 ## Original Objective
@@ -37,8 +39,12 @@ digest verification workflow can be evaluated without physical hardware.
 
 - Hardware selection, wiring, pin mapping, and physical test setup: TODO
 - Physical Portenta-to-Nano ESP32 flash tests performed: TODO
-- Manual review or changes made after Codex output: TODO
-- Final automated test command and result: TODO
+- Manual review or changes made after Codex output: Reviewed simulator and
+  uploader behavior and requested refinements to timing output, resume recovery,
+  known-session reporting, and judge instructions.
+- Final automated test command and result:
+  `python -m unittest discover -s tests -v` completed successfully with 10 tests
+  passing on July 18, 2026.
 - Final hardware demonstration result: TODO
 
 ## Safety and Privacy Review

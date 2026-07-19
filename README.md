@@ -666,3 +666,10 @@ The meaningful remaining gaps are:
 2. Hardware-verify the target-aware stub-assisted `--erase` flow on the actual Portenta + Arduino Nano ESP32 wiring.
 3. Consider whether you want to persist the post-flash verification record beyond the live session status API, for example in QSPI logs or a downloadable audit artifact.
 4. Create a solution to save WiFi credentials into an encrypted file and then have platformio.ini consume that encrypted file instead of saving credentials in plain open ASCII text. 
+
+## License
+
+Original project source and documentation are licensed under the
+[MIT License](LICENSE). Third-party frameworks, libraries, tools, and code
+incorporated into generated firmware remain under their respective licenses; see
+[Third-Party Notices](THIRD_PARTY_NOTICES.md).

@@ -31,9 +31,13 @@
 
 ## Final Verification
 
-- Automated test date: TODO
-- Automated test result: TODO
-- Simulator demonstration result: TODO
+- Automated test date: July 18, 2026
+- Automated test result: `python -m unittest discover -s tests -v` completed
+  successfully with all 10 tests passing.
+- Simulator demonstration result: Automated end-to-end simulator checks passed
+  on July 18, 2026. They verified firmware upload, interrupted-transfer resume
+  across a simulator restart, preserved flash offsets, matching `staged_md5` and
+  `flash_md5` values, and `flash_verified=True`.
 - Physical hardware demonstration date: TODO
 - Physical hardware demonstration result: TODO
 - Repository visibility verified while signed out: TODO
