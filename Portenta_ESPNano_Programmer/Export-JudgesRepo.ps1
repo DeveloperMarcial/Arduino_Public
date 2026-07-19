@@ -11,9 +11,10 @@ $sourceRepositoryRoot = [System.IO.Path]::GetFullPath(
     (Split-Path $sourceRoot -Parent)
 )
 if ([string]::IsNullOrWhiteSpace($Destination)) {
-    $Destination = Join-Path (
+    $publicRepositoryRoot = Join-Path (
         Split-Path $sourceRepositoryRoot -Parent
-    ) "Portenta_ESPNano_Programmer"
+    ) "Arduino_Public"
+    $Destination = Join-Path $publicRepositoryRoot "Portenta_ESPNano_Programmer"
 }
 $destinationRoot = [System.IO.Path]::GetFullPath($Destination)
 
