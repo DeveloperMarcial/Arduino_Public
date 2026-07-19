@@ -69,25 +69,18 @@ function Test-JudgeFile {
     return $false
 }
 
-$trackedFiles = @(& git -C $sourceRoot ls-files -- .)
+$sourceFiles = @(
+    & git -C $sourceRoot ls-files --cached --others --exclude-standard -- .
+)
 if ($LASTEXITCODE -ne 0) {
-    throw "Unable to enumerate tracked source files with git."
+    throw "Unable to enumerate tracked and untracked source files with git."
 }
 
 $filesToCopy = @(
-    $trackedFiles |
+    $sourceFiles |
         Where-Object { Test-JudgeFile $_ } |
         Sort-Object -Unique
 )
-
-# Include this exporter before its first commit so the initial export is reproducible.
-$exporterName = Split-Path $PSCommandPath -Leaf
-if (
-    (Test-Path -LiteralPath (Join-Path $sourceRoot $exporterName)) -and
-    $filesToCopy -notcontains $exporterName
-) {
-    $filesToCopy += $exporterName
-}
 
 if ($PSCmdlet.ShouldProcess($destinationRoot, "Create judges repository export")) {
     New-Item -ItemType Directory -Path $destinationRoot -Force | Out-Null

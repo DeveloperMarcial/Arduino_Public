@@ -4,6 +4,8 @@ import argparse
 import contextlib
 import io
 import sys
+import threading
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -13,9 +15,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "tools"))
 
 from esp32_uploader import (  # noqa: E402
+    Esp32UsbMonitor,
+    SerialPortInfo,
     build_resume_command,
+    is_esp32_serial_port,
+    print_flash_finished,
     print_interrupted_recovery,
     print_known_sessions,
+    usb_port_transition_messages,
 )
 
 
@@ -74,6 +81,130 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
         text = output.getvalue()
         self.assertIn("sess-a1b2c3d4 state=uploading", text)
         self.assertIn("sess-deadbeef state=completed", text)
+
+    def test_total_time_prints_immediately_after_flash_time(self) -> None:
+        output = io.StringIO()
+        with (
+            patch("esp32_uploader.time.perf_counter", return_value=35.5),
+            contextlib.redirect_stdout(output),
+        ):
+            print_flash_finished(
+                flash_started=30.0,
+                total_started=10.0,
+                state="completed",
+            )
+
+        self.assertEqual(
+            output.getvalue().splitlines(),
+            [
+                "flash finished: 5.50 seconds",
+                "total time: 25.50 seconds",
+                "completed",
+            ],
+        )
+
+    def test_nano_usb_port_is_distinguished_from_portenta(self) -> None:
+        nano = SerialPortInfo("COM7", "USB Serial Device", 0x2341, 0x0070, "NANO")
+        portenta = SerialPortInfo("COM8", "USB Serial Device", 0x2341, 0x025B, "H7")
+
+        self.assertTrue(is_esp32_serial_port(nano, "arduino_nano_esp32"))
+        self.assertFalse(is_esp32_serial_port(portenta, "arduino_nano_esp32"))
+
+    def test_usb_disconnect_and_reconnect_messages_include_com_port(self) -> None:
+        nano = SerialPortInfo("COM7", "USB Serial Device", 0x2341, 0x0070, "NANO")
+
+        disconnected = usb_port_transition_messages([nano], [])
+        reconnected = usb_port_transition_messages([], [nano])
+
+        self.assertIn("COM7", disconnected[0])
+        self.assertIn("disconnected", disconnected[0])
+        self.assertIn("COM7", reconnected[0])
+        self.assertIn("detected", reconnected[0])
+
+    def test_completed_waits_for_previously_detected_port_to_reappear(self) -> None:
+        nano = SerialPortInfo("COM7", "USB Serial Device", 0x2341, 0x0070, "NANO")
+        visible_ports = [nano]
+
+        def list_ports() -> list[SerialPortInfo]:
+            return list(visible_ports)
+
+        monitor = Esp32UsbMonitor(
+            "arduino_nano_esp32",
+            poll_interval=0.01,
+            port_lister=list_ports,
+        )
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            monitor.start()
+            visible_ports.clear()
+            time.sleep(0.03)
+            self.assertFalse(monitor.wait_for_reappearance(timeout=0.02))
+            monitor.stop()
+
+        self.assertIn("waiting up to 0.02 seconds", output.getvalue())
+        self.assertIn("not reporting completed", output.getvalue())
+
+    def test_completed_does_not_wait_when_port_never_disconnected(self) -> None:
+        nano = SerialPortInfo("COM7", "USB Serial Device", 0x2341, 0x0070, "NANO")
+        monitor = Esp32UsbMonitor(
+            "arduino_nano_esp32",
+            poll_interval=1,
+            port_lister=lambda: [nano],
+        )
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            monitor.start()
+            self.assertTrue(monitor.wait_for_reappearance(timeout=0))
+            monitor.stop()
+
+        self.assertIn("completion gate armed for COM7", output.getvalue())
+        self.assertIn(
+            "completion gate satisfied; COM7 (VID:PID 2341:0070) is present",
+            output.getvalue(),
+        )
+
+    def test_completed_wait_unblocks_when_port_reappears(self) -> None:
+        nano = SerialPortInfo("COM7", "USB Serial Device", 0x2341, 0x0070, "NANO")
+        visible_ports = [nano]
+        monitor = Esp32UsbMonitor(
+            "arduino_nano_esp32",
+            poll_interval=0.01,
+            port_lister=lambda: list(visible_ports),
+        )
+
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            monitor.start()
+            visible_ports.clear()
+            time.sleep(0.03)
+            reconnect = threading.Timer(0.03, lambda: visible_ports.append(nano))
+            reconnect.start()
+            self.assertTrue(monitor.wait_for_reappearance(timeout=0.5))
+            reconnect.join()
+            monitor.stop()
+
+        self.assertIn("completion gate satisfied", output.getvalue())
+        self.assertIn("COM7 (VID:PID 2341:0070) reappeared", output.getvalue())
+
+    def test_second_disconnect_clears_previous_reappearance(self) -> None:
+        nano = SerialPortInfo("COM7", "USB Serial Device", 0x2341, 0x0070, "NANO")
+        visible_ports = [nano]
+        monitor = Esp32UsbMonitor(
+            "arduino_nano_esp32",
+            poll_interval=1,
+            port_lister=lambda: list(visible_ports),
+        )
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            monitor.start()
+            visible_ports.clear()
+            monitor._observe_ports([])
+            visible_ports.append(nano)
+            monitor._observe_ports([nano])
+            visible_ports.clear()
+            monitor._observe_ports([])
+            self.assertFalse(monitor.wait_for_reappearance(timeout=0))
+            monitor.stop()
 
 
 if __name__ == "__main__":

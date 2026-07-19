@@ -12,10 +12,6 @@ hardware.
 
 *Securely Upload, Resume, Flash, and Verify.*
 
-> **Security status:** AES encryption is planned. The current implementation
-> uses HTTP for transport, SHA-256 to verify staged images, and MD5 readback to
-> verify flashed images.
-
 ## Use Cases
 
 ### Remote Firmware Deployment
@@ -53,19 +49,28 @@ digest verification without owning a Portenta H7 or ESP32.
 Add AES encryption to protect proprietary firmware in transit while retaining
 resumable uploads, staged-image validation, and post-flash verification.
 
+> **Security status:** AES encryption is planned. The current implementation
+> uses HTTP for transport, SHA-256 to verify staged images, and MD5 readback to
+> verify flashed images.
+
 ## What It Does
 
 This project turns an Arduino Portenta H7 into a network-connected, production-style programmer for a remote ESP32. A PC uploads bootloader, partition, and application images over HTTP; the Portenta stages them in QSPI, drives the ESP32 boot pins, flashes each image at its required address over UART, and verifies what actually landed in flash.
 
 Why it rocks: this is not a fire-and-forget uploader. Transfers are chunked, hash-checked, and resumable after an interruption. Staged images are verified with SHA-256, flashed images are read back and verified with MD5, and every phase exposes useful progress and errors. The same uploader works over Ethernet or WiFi, while the included PC simulator lets judges exercise sessions, resume, flashing, and verification without owning either board.
 
-https://store-usa.arduino.cc/products/portenta-h7
-https://content.arduino.cc/assets/Pinout-PortentaH7_latest.pdf
+Arduino Portenta H7: The WiFi RXer and ESP32 Nano programmer
+* $115 [Buy It](https://store-usa.arduino.cc/products/portenta-h7])
+* $50 [Wifi/Ethernet Shield](https://store-usa.arduino.cc/products/portenta-vision-shield-ethernet?_pos=1&_psq=AVX00039+OR+ASX00031+OR+ASX00027+OR+ASX00021&_psid=a54aa7f3a&_ss=e&_v=1.0)
+* [Datasheet](https://www.st.com/resource/en/datasheet/stm32h747xi.pdf)
+* [Schematic](https://content.arduino.cc/assets/Pinout-PortentaH7_latest.pdf)
 
-https://docs.arduino.cc/resources/datasheets/ABX00083-datasheet.pdf <-- See page 16.
-https://docs.arduino.cc/resources/schematics/ABX00083-schematics.pdf
+Arduino Nano (ESP32): The target we want to remotely program
+* $20 [Buy It](https://store-usa.arduino.cc/products/nano-esp32-with-headers?utm_source=google&utm_medium=cpc&utm_campaign=US-Pmax&gad_source=1&gad_campaignid=21317508903&gbraid=0AAAAACbEa851RIH7ETsiQLcRBH2UTh4Qz&gclid=Cj0KCQjw6_HSBhCpARIsANvVltb0hvLrkWAmrkuXAsR3QqS2igoS6kAk_-hC5XfleictbejjI_P49HsaAg8nEALw_wcB)
+* [Datasheet](https://docs.arduino.cc/resources/datasheets/ABX00083-datasheet.pdf) <-- See page 16 for pinout.
+* [Schematic](https://docs.arduino.cc/resources/schematics/ABX00083-schematics.pdf)
 
-This project provides a `PlatformIO` application for an `Arduino Portenta H7` that receives ESP32 firmware artifacts over Portenta Ethernet or WiFi and flashes a remote ESP32 over `UART1 + EN + GPIO0`.
+This project provides a [PlatformIO](https://docs.platformio.org/en/latest/integration/ide/vscode.html) application for an `Arduino Portenta H7` that receives ESP32 firmware artifacts over Portenta Ethernet or WiFi and flashes a remote ESP32 over `UART1 + EN + GPIO0`.
 
 ## Hardware Mapping
 
@@ -126,6 +131,8 @@ PC uploader timing:
 
 The `requests` timeout value applies separately to establishing the connection and waiting for response data; it is not a total deadline for the complete upload. A refused connection can fail immediately. Change the polling interval with `--poll-interval`; the HTTP timeout constants are currently defined as `DEFAULT_TIMEOUT` and `FLASH_TIMEOUT` in `tools/esp32_uploader.py`.
 
+On systems with `pyserial` installed, the uploader also identifies the Arduino Nano ESP32 COM port and watches it while flashing. Windows may remove that COM port when the ESP32 enters programming mode; this is expected because the Portenta performs the actual programming over its UART connection. If the port was present before flashing and disconnects, the uploader waits up to 30 seconds for it to reappear before printing `completed`; a timeout produces a clear USB-status error and does not report completion. Install the uploader dependencies with `python -m pip install -r tools/requirements.txt`.
+
 Portenta firmware timing:
 
 | Operation | Current value |
@@ -148,12 +155,14 @@ If a normal uploader request times out after a session ID has been received, the
 `tools/portenta_sim.py` implements the same HTTP routes and status fields as the Portenta firmware so the existing uploader can be demonstrated without hardware. It uses only the Python standard library. Start it from the repository root:
 
 ```powershell
+# Start Simulator App
 python tools/portenta_sim.py --host 127.0.0.1 --port 8080
 ```
 
 Without `--storage`, staged data is placed in a temporary directory and safely removed when the simulator exits. Use a persistent directory to demonstrate resume across restarts:
 
 ```powershell
+# Start Simulator App with Storage
 python tools/portenta_sim.py --host 127.0.0.1 --port 8080 --storage .portenta-sim --flash-delay 0.4
 ```
 
@@ -162,7 +171,7 @@ The startup banner, HTTP details, root health response, and status details are l
 Run the existing uploader unchanged apart from targeting localhost:
 
 ```powershell
-**Generic Upload**
+# Generic Upload
 python tools/esp32_uploader.py `
   --host 127.0.0.1 --port 8080 `
   --target arduino_nano_esp32 --baud 460800 `
@@ -170,7 +179,7 @@ python tools/esp32_uploader.py `
   --image partitions:path\to\partitions.bin `
   --image app0:path\to\firmware.bin
 
-**This Repo: 3 Blinks: 1 long, then 2 short**
+# This Repo: 3 Blinks: 1 long, then 2 short
 python tools/esp32_uploader.py `
   --host 127.0.0.1 --port 8080 `
   --target arduino_nano_esp32 --baud 460800 `
@@ -178,7 +187,7 @@ python tools/esp32_uploader.py `
   --image partitions:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.partitions.bin `
   --image app0:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bin
 	
-**This Repo: Upload other Arduino App: 3 Fast Blinks**    
+# This Repo: Upload other Arduino App: 3 Fast Blinks
 python tools/esp32_uploader.py `
   --host 127.0.0.1 --port 8080 `
   --target arduino_nano_esp32 --baud 460800 `
@@ -194,12 +203,16 @@ The simulator validates image names, offsets, flash bounds, chunk indexes and ex
 1. Start the persistent simulator:
 
    ```powershell
+   # Open PowerShell (Terminal_1):
+   # cd <repo_root>
    python tools/portenta_sim.py --host 127.0.0.1 --port 8080 --storage .portenta-sim --flash-delay 0.4
    ```
 
-2. In another PowerShell terminal, run the complete uploader command below. While it displays `image chunk upload started...`, press `Ctrl+C` to simulate an interrupted upload. Keep the simulator running in the first terminal and note the real session ID and resume command printed by the uploader.
+2. In another PowerShell terminal, run the complete uploader command below. While it displays `image chunk upload started...`, press `Ctrl+Break` to simulate an interrupted upload. Keep the simulator running in the first terminal and note the real session ID and resume command printed by the uploader.
 
    ```powershell
+   # Open Another PowerShell (Terminal_2):
+   # cd <repo_root>
    python tools/esp32_uploader.py `
      --host 127.0.0.1 --port 8080 `
      --target arduino_nano_esp32 --baud 460800 `
@@ -208,17 +221,22 @@ The simulator validates image names, offsets, flash bounds, chunk indexes and ex
      --image 'bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin' `
      --image 'partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin' `
      --image 'app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin'
+
+   # When you see "image chunk upload started...", press `Ctrl+Break`.
    ```
 
-3. Stop the simulator with `Ctrl+C`. Then start another upload with the same persistent storage:
+3. The simulator in Terminal_1 is now terminated. Then start another upload with the same persistent storage:
 
    ```powershell
+   # In Terminal_1:
    python tools/portenta_sim.py --host 127.0.0.1 --port 8080 --storage .portenta-sim --flash-delay 0.4
    ```
 
-4. Run the exact resume command printed by the uploader after `Ctrl+C`. It contains the real session ID from step 2 and has this complete form:
+4. Run the exact resume command printed by the uploader after `Ctrl+Break`. It contains the real session ID from step 2 and has this complete form:
 
    ```powershell
+   # NOTE: In Terminal_2 you will see the following command. Complete with Session-Id.
+   # In Terminal_2:
    python tools/esp32_uploader.py `
      --host 127.0.0.1 --port 8080 `
      --target arduino_nano_esp32 --baud 460800 `
@@ -233,22 +251,28 @@ The simulator validates image names, offsets, flash bounds, chunk indexes and ex
 
    In the example above, replace `sess-xxxxxxxx` with the actual session ID printed in step 2. The uploader validates the stored manifest, queries each `received` chunk bitmap, sends only missing chunks, and starts the simulated flash.
 
-5. Watch `flashing` progress details followed by `completed`. The uploader prints matching `staged_md5` and `flash_md5` values with `flash_verified=True`.
+5. Watch `flashing` progress details followed by `completed`.
+* The uploader prints matching `staged_md5` and `flash_md5` values with `flash_verified=True`.
+* Re-run the uploader and allow it to finish.
+  * You will see the "total time" is longer verifying the _resume_ option works.
 
 Run the automated simulator checks with:
 
 ```powershell
+python tools/run_tests.py
+or
 python -m unittest discover -s tests -v
 ```
 
-`unittest` is Python's built-in testing framework, so a separate test runner such as `pytest` is not required. This command means:
+`unittest` is Python's built-in testing framework, so a separate test framework
+such as `pytest` is not required. `tools/run_tests.py`:
 
-- `python -m unittest` runs the standard-library test framework using the active Python installation.
-- `discover` automatically finds test modules and test cases instead of requiring each test filename on the command line.
-- `-s tests` starts discovery in this repository's `tests` directory.
-- `-v` enables verbose output so every test name and its `ok`, `FAIL`, or `ERROR` result is shown.
+- discovers test modules and test cases under `tests`
+- uses verbose output so every test reports `ok`, `FAIL`, or `ERROR`
+- preserves a failing exit code for automation
+- ends with a concise result such as `11 of 11 PASSED`
 
-These tests start local simulator servers on temporary ports, use temporary storage directories, exercise upload, resume, validation, failure, session-listing, and flash-verification behavior, then clean up their temporary resources. They do not contact a physical Portenta or ESP32 and do not flash real hardware. A successful run ends with `OK`; failures include a traceback identifying the failed test and assertion.
+These tests start local simulator servers on temporary ports, use temporary storage directories, exercise upload, resume, validation, failure, session-listing, and flash-verification behavior, then clean up their temporary resources. They do not contact a physical Portenta or ESP32 and do not flash real hardware. A successful run ends with `OK` and the pass-count summary; failures include a traceback identifying the failed test and assertion.
 
 The simulator models local staging, interrupted upload/resume, erase metadata acceptance, ESP flash address ranges, progress, and digest verification. It does **not** access QSPI, toggle Portenta `EN`/`GPIO0`, communicate over UART, enter an ESP ROM bootloader, run a real stub erase, verify electrical wiring, or flash physical Portenta/ESP32 hardware. Those operations require the actual boards.
 
@@ -433,6 +457,21 @@ Put the Portenta into bootloader mode if needed.
 Usually this means double-pressing reset until the bootloader LED pattern changes.
 COM11 changes to COM12 and the on-board pulses green.
 
+### Runtime Network Behavior: Finding the Portenta IP Address
+
+After uploading the Portenta firmware, open its serial monitor and reboot the
+board:
+
+`pio device monitor -p COM11 -b 115200`
+
+Watch the startup log for the HTTP listener address, then pass that address to
+`esp32_uploader.py` with `--host`:
+
+- Ethernet prefers a DHCP-assigned address. If DHCP fails, use the static
+  fallback `192.168.1.177` on port `8080`.
+- WiFi prints its assigned address after joining the configured access point.
+  WiFi does not have a static fallback.
+
 #### Ethernet build and upload:
 
 Build:
@@ -492,12 +531,29 @@ The workflow is:
 * Flash this Portenta firmware onto the Portenta.
 * Connect the Portenta to Ethernet or build the WiFi environment and let it join your access point.
 * [Wire the Portenta](Pinouts.png) to the Arduino Nano ESP32 UART/EN/GPIO0 lines.
-* Let the Portenta boot and note its IP address from serial output, or use the Ethernet fallback 192.168.1.177:8080 if DHCP is unavailable.
+* [Find the Portenta IP address](#runtime-network-behavior-finding-the-portenta-ip-address) in its startup serial output, or use the Ethernet fallback `192.168.1.177:8080` if DHCP is unavailable.
 * Run `tools/esp32_uploader.py` on your PC with the ESP image files you want staged and flashed.
 
-Typical command:
+```powershell
+# Typical command
+python tools/esp32_uploader.py `
+  --host 192.168.1.177 `
+  --port 8080 `
+  --target arduino_nano_esp32 `
+  --baud 460800 `
+  --image bootloader:Blinky_1000ms.ino.bootloader.bin `
+  --image partitions:Blinky_1000ms.ino.partitions.bin `
+  --image app0:Blinky_1000ms.ino.bin
+```
 
-    python tools/esp32_uploader.py `
+Our Test command:
+NOTE: So relative paths are resolved from the folder where you run the Python command, and absolute paths work from anywhere.
+
+Our compiled Blinky app that we will load on the Nano is here: `C:\Users\mmarc\AppData\Local\arduino\sketches\9ADE7FFE281152CE1367D725B05AA39B`
+
+```powershell
+# Generic Upload**
+python tools/esp32_uploader.py `
     --host 192.168.1.177 `
     --port 8080 `
     --target arduino_nano_esp32 `
@@ -506,47 +562,34 @@ Typical command:
     --image partitions:Blinky_1000ms.ino.partitions.bin `
     --image app0:Blinky_1000ms.ino.bin
 
-Our Test command:
-NOTE: So relative paths are resolved from the folder where you run the Python command, and absolute paths work from anywhere.
-
-Our compiled Blinky app that we will load on the Nano is here: `C:\Users\mmarc\AppData\Local\arduino\sketches\9ADE7FFE281152CE1367D725B05AA39B`
-
-    **Generic Upload**
-    python tools/esp32_uploader.py `
-      --host 192.168.1.177 `
-      --port 8080 `
-      --target arduino_nano_esp32 `
-      --baud 460800 `
-      --image bootloader:Blinky_1000ms.ino.bootloader.bin `
-      --image partitions:Blinky_1000ms.ino.partitions.bin `
-      --image app0:Blinky_1000ms.ino.bin
-
-    **This Repo: 3 Blinks: 1 long, then 2 short**
-    python tools/esp32_uploader.py `
-      --host 192.168.1.178 --port 8080 `
-      --target arduino_nano_esp32 `
-      --baud 460800 `
-      --image bootloader:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bootloader.bin `
-      --image partitions:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.partitions.bin `
-      --image app0:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bin
-
-    python tools/esp32_uploader.py `
-    --host 192.168.1.178 `
-    --port 8080 `
+# This Repo: 3 Blinks: 1 long, then 2 short**
+python tools/esp32_uploader.py `
+    --host 192.168.1.178 --port 8080 `
     --target arduino_nano_esp32 `
     --baud 460800 `
-    --image bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin `
-    --image partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin `
-    --image app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin  
+    --image bootloader:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bootloader.bin `
+    --image partitions:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.partitions.bin `
+    --image app0:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bin
 
+# This Repo: 3 Blinks: 3 short** 
+python tools/esp32_uploader.py `
+--host 192.168.1.178 `
+--port 8080 `
+--target arduino_nano_esp32 `
+--baud 460800 `
+--image bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin `
+--image partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin `
+--image app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin  
+```
 Or point to absolute path:
-
-    python tools/esp32_uploader.py `
-      --host 192.168.1.178 --port 8080 --target arduino_nano_esp32 --baud 460800 `
-      --image bootloader:C:\Users\mmarc\OneDrive\Documents\PlatformIO\Projects\260425-115203-arduino_nano_esp32\.pio\build\arduino_nano_esp32\bootloader.bin `
-      --image partitions:C:\Users\mmarc\OneDrive\Documents\PlatformIO\Projects\260425-115203-arduino_nano_esp32\.pio\build\arduino_nano_esp32\partitions.bin `
-      --image app0:C:\Users\mmarc\OneDrive\Documents\PlatformIO\Projects\260425-115203-arduino_nano_esp32\.pio\build\arduino_nano_esp32\firmware.bin
-
+```powershell
+# Upload with Absolute Paths
+python tools/esp32_uploader.py `
+    --host 192.168.1.178 --port 8080 --target arduino_nano_esp32 --baud 460800 `
+    --image bootloader:C:\Users\mmarc\OneDrive\Documents\PlatformIO\Projects\260425-115203-arduino_nano_esp32\.pio\build\arduino_nano_esp32\bootloader.bin `
+    --image partitions:C:\Users\mmarc\OneDrive\Documents\PlatformIO\Projects\260425-115203-arduino_nano_esp32\.pio\build\arduino_nano_esp32\partitions.bin `
+    --image app0:C:\Users\mmarc\OneDrive\Documents\PlatformIO\Projects\260425-115203-arduino_nano_esp32\.pio\build\arduino_nano_esp32\firmware.bin
+```
 What the Python script does:
 
 * POST /api/v1/session to create a session
@@ -583,15 +626,16 @@ A full erase is normally unnecessary for routine updates that use the same parti
 `--erase` is destructive: it removes all contents from the target ESP32 flash, including data partitions and settings that are not included in the upload command. Back up anything important first. It also takes longer and adds a full-chip erase cycle, so it should not be used automatically for every update.
 
 The uploader requires a local `esptool` installation because it obtains the target-specific flasher stub and includes that stub in the manifest. The Portenta loads the stub into ESP RAM, performs the full-chip erase, then writes and verifies the requested images. Keep the target selection and image set correct: erase does not make firmware or partition layouts from different ESP32 families interchangeable.
-
-    python tools/esp32_uploader.py `
-      --host 192.168.1.177 `
-      --target arduino_nano_esp32 `
-      --erase `
-      --image bootloader:bootloader.bin `
-      --image partitions:partitions.bin `
-      --image app0:firmware.bin
-
+```powershell
+# Uploader Generic Command
+python tools/esp32_uploader.py `
+    --host 192.168.1.177 `
+    --target arduino_nano_esp32 `
+    --erase `
+    --image bootloader:bootloader.bin `
+    --image partitions:partitions.bin `
+    --image app0:firmware.bin
+```
 #### Resume a partial upload:
 
 Resume is useful when the manifest was accepted and only some image chunks reached the Portenta. Typical scenarios include:
@@ -613,25 +657,27 @@ If the requested session returns `404 Unknown session`, the uploader queries `GE
 The target, baud, chunk size, erase setting, image offsets, filenames, sizes, and SHA-256 hashes must match the original upload. In practice, use the identical command and add only `--session-id sess-xxxxxxxx --resume`.
 
 Resume does not recover an interrupted ESP flash operation. If the flash request merely timed out, query the existing session status first because the Portenta may still be flashing or may already have completed. Also, the real Portenta currently keeps the active session and chunk bitmap in RAM: rebooting or power-cycling it, or creating a new session, prevents resuming the old upload even though partial staged bytes may remain in QSPI.
+```powershell
+# Resume an Upload
+python tools/esp32_uploader.py `
+    --host 192.168.1.177 `
+    --target arduino_nano_esp32 `
+    --session-id sess-12345678 `
+    --resume `
+    --image bootloader:bootloader.bin `
+    --image partitions:partitions.bin `
+    --image app0:firmware.bin
 
-    python tools/esp32_uploader.py `
-      --host 192.168.1.177 `
-      --target arduino_nano_esp32 `
-      --session-id sess-12345678 `
-      --resume `
-      --image bootloader:bootloader.bin `
-      --image partitions:partitions.bin `
-      --image app0:firmware.bin
-
-    python tools/esp32_uploader.py `
-      --host 192.168.1.178 `
-      --target arduino_nano_esp32 `
-      --session-id sess-006595d0 `
-      --resume `
-      --image bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin `
-      --image partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin `
-      --image app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin   
-  
+# Resume an Upload with Absolute Paths
+python tools/esp32_uploader.py `
+    --host 192.168.1.178 `
+    --target arduino_nano_esp32 `
+    --session-id sess-006595d0 `
+    --resume `
+    --image bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin `
+    --image partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin `
+    --image app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin   
+```  
 
 NOTE: Depending on where yourun the Python, the Python output might look like:
   
@@ -640,8 +686,6 @@ NOTE: Depending on where yourun the Python, the Python output might look like:
     `sess-000050a6 <--Actual session id is 8 chars after "sess-".`
 
 The flash URL: `/api/v1/session/sess-000050a6/flash`
-
-`python tools/esp32_uploader.py --host 192.168.1.178 --port 8080 --target arduino_nano_esp32 --baud 460800 --session-id sess-0000fc8a --resume --image bootloader:C:\Users\mmarc\AppData\Local\arduino\sketches\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bootloader.bin --image partitions:C:\Users\mmarc\AppData\Local\arduino\sketches\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.partitions.bin --image app0:C:\Users\mmarc\AppData\Local\arduino\sketches\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bin`
 
 A few important notes:
 

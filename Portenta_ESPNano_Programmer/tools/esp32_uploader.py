@@ -9,23 +9,33 @@ import importlib.util
 import hashlib
 import json
 import re
+import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Callable, Iterable
 from urllib.parse import quote
 
 import requests
+
+try:
+    from serial.tools import list_ports as serial_list_ports
+except ImportError:
+    serial_list_ports = None
 
 
 DEFAULT_TIMEOUT      = 10
 FLASH_TIMEOUT        = 120
 DEFAULT_CHUNK_SIZE   = 1024
 DEFAULT_TARGET       = "arduino_nano_esp32"
+USB_POLL_INTERVAL    = 0.2
+USB_REAPPEAR_TIMEOUT = 30.0
 REPO_ROOT            = Path(__file__).resolve().parents[1]
 STUB_TEXT_IMAGE_NAME = "__stub_text.bin"
 STUB_DATA_IMAGE_NAME = "__stub_data.bin"
 SESSION_ID_PATTERN   = re.compile(r"sess-[0-9a-fA-F]{8}")
+ARDUINO_NANO_ESP32_USB_ID = (0x2341, 0x0070)
+ESPRESSIF_USB_VENDOR_ID = 0x303A
 
 
 @dataclass(frozen=True)
@@ -47,6 +57,259 @@ class UploadImage:
     @property
     def sha256(self) -> str:
         return hashlib.sha256(self.data).hexdigest()
+
+
+@dataclass(frozen=True)
+class SerialPortInfo:
+    device: str
+    description: str
+    vid: int | None
+    pid: int | None
+    serial_number: str | None
+
+    @property
+    def identity(self) -> tuple[str, int | None, int | None, str | None]:
+        return (self.device.upper(), self.vid, self.pid, self.serial_number)
+
+
+def read_serial_ports(
+    port_lister: Callable[[], Iterable[object]] | None = None,
+) -> list[SerialPortInfo]:
+    if port_lister is None:
+        if serial_list_ports is None:
+            return []
+        port_lister = serial_list_ports.comports
+
+    return [
+        SerialPortInfo(
+            device=str(getattr(port, "device", "")),
+            description=str(getattr(port, "description", "") or ""),
+            vid=getattr(port, "vid", None),
+            pid=getattr(port, "pid", None),
+            serial_number=getattr(port, "serial_number", None),
+        )
+        for port in port_lister()
+        if getattr(port, "device", None)
+    ]
+
+
+def is_esp32_serial_port(port: SerialPortInfo, target_name: str) -> bool:
+    usb_id = (port.vid, port.pid)
+    if target_name in {"arduino_nano_esp32", "esp32s3"}:
+        return (
+            usb_id == ARDUINO_NANO_ESP32_USB_ID
+            or port.vid == ESPRESSIF_USB_VENDOR_ID
+        )
+    return port.vid == ESPRESSIF_USB_VENDOR_ID
+
+
+def format_serial_port(port: SerialPortInfo) -> str:
+    if port.vid is None or port.pid is None:
+        return port.device
+    return f"{port.device} (VID:PID {port.vid:04X}:{port.pid:04X})"
+
+
+def usb_port_transition_messages(
+    previous: list[SerialPortInfo],
+    current: list[SerialPortInfo],
+) -> list[str]:
+    previous_by_id = {port.identity: port for port in previous}
+    current_by_id = {port.identity: port for port in current}
+    messages = []
+
+    for identity in previous_by_id.keys() - current_by_id.keys():
+        port = previous_by_id[identity]
+        messages.append(
+            f"ESP32 USB status: {format_serial_port(port)} disconnected "
+            "while entering programming mode"
+        )
+    for identity in current_by_id.keys() - previous_by_id.keys():
+        port = current_by_id[identity]
+        messages.append(
+            f"ESP32 USB status: ESP32 serial port detected on "
+            f"{format_serial_port(port)}"
+        )
+    return messages
+
+
+class Esp32UsbMonitor:
+    """Report ESP32 USB serial changes without opening or locking the port."""
+
+    def __init__(
+        self,
+        target_name: str,
+        *,
+        poll_interval: float = USB_POLL_INTERVAL,
+        port_lister: Callable[[], Iterable[object]] | None = None,
+    ) -> None:
+        self.target_name = target_name
+        self.poll_interval = poll_interval
+        self.port_lister = port_lister
+        self._stop_event = threading.Event()
+        self._thread: threading.Thread | None = None
+        self._ports_lock = threading.Lock()
+        self._ports: list[SerialPortInfo] = []
+        self._initial_port_seen = False
+        self._disconnect_seen = False
+        self._reappeared_event = threading.Event()
+        self._transition_seen = False
+        self._monitoring_available = False
+        self._started = False
+        self._stopped = False
+
+    def _esp32_ports(self) -> list[SerialPortInfo]:
+        return [
+            port
+            for port in read_serial_ports(self.port_lister)
+            if is_esp32_serial_port(port, self.target_name)
+        ]
+
+    def start(self) -> None:
+        self._started = True
+        if self.port_lister is None and serial_list_ports is None:
+            print(
+                "ESP32 USB status: COM-port monitoring unavailable; "
+                "install dependencies with python -m pip install -r tools/requirements.txt",
+                flush=True,
+            )
+            return
+
+        try:
+            self._ports = self._esp32_ports()
+        except Exception as error:
+            print(f"ESP32 USB status: unable to enumerate COM ports: {error}", flush=True)
+            return
+
+        self._monitoring_available = True
+        self._initial_port_seen = bool(self._ports)
+        if self._ports:
+            detected = ", ".join(format_serial_port(port) for port in self._ports)
+            print(
+                f"ESP32 USB status: completion gate armed for {detected}",
+                flush=True,
+            )
+        else:
+            print(
+                "ESP32 USB status: no matching ESP32 COM port detected before flash",
+                flush=True,
+            )
+
+        self._thread = threading.Thread(
+            target=self._run,
+            name="esp32-usb-monitor",
+            daemon=True,
+        )
+        self._thread.start()
+
+    def _observe_ports(self, current: list[SerialPortInfo]) -> None:
+        with self._ports_lock:
+            messages = usb_port_transition_messages(self._ports, current)
+            if self._ports and not current:
+                self._disconnect_seen = True
+            if self._disconnect_seen:
+                if current:
+                    self._reappeared_event.set()
+                else:
+                    self._reappeared_event.clear()
+            if messages:
+                self._transition_seen = True
+            self._ports = current
+
+        for message in messages:
+            print(message, flush=True)
+
+    def _run(self) -> None:
+        while not self._stop_event.wait(self.poll_interval):
+            try:
+                current = self._esp32_ports()
+            except Exception:
+                continue
+            self._observe_ports(current)
+
+    def wait_for_reappearance(
+        self,
+        timeout: float = USB_REAPPEAR_TIMEOUT,
+    ) -> bool:
+        if not self._initial_port_seen:
+            reason = (
+                "COM-port monitoring was unavailable"
+                if not self._monitoring_available
+                else "no matching ESP32 COM port was detected before flash"
+            )
+            print(
+                f"ESP32 USB status: completion gate not armed because {reason}",
+                flush=True,
+            )
+            return True
+
+        try:
+            self._observe_ports(self._esp32_ports())
+        except Exception:
+            pass
+
+        with self._ports_lock:
+            disconnect_seen = self._disconnect_seen
+            current_ports = list(self._ports)
+        if not disconnect_seen:
+            detected = ", ".join(format_serial_port(port) for port in current_ports)
+            print(
+                f"ESP32 USB status: completion gate satisfied; "
+                f"{detected} is present",
+                flush=True,
+            )
+            return True
+        if self._reappeared_event.is_set() and current_ports:
+            detected = ", ".join(format_serial_port(port) for port in current_ports)
+            print(
+                f"ESP32 USB status: completion gate satisfied; "
+                f"{detected} reappeared",
+                flush=True,
+            )
+            return True
+
+        print(
+            f"ESP32 USB status: waiting up to {timeout:g} seconds "
+            "for the ESP32 COM port to reappear...",
+            flush=True,
+        )
+        if self._reappeared_event.wait(timeout):
+            try:
+                self._observe_ports(self._esp32_ports())
+            except Exception:
+                pass
+            with self._ports_lock:
+                current_ports = list(self._ports)
+            if current_ports:
+                detected = ", ".join(
+                    format_serial_port(port) for port in current_ports
+                )
+                print(
+                    f"ESP32 USB status: completion gate satisfied; "
+                    f"{detected} reappeared",
+                    flush=True,
+                )
+                return True
+
+        print(
+            "ESP32 USB status: ESP32 COM port did not reappear; "
+            "not reporting completed",
+            flush=True,
+        )
+        return False
+
+    def stop(self) -> None:
+        if not self._started or self._stopped:
+            return
+        self._stopped = True
+        self._stop_event.set()
+        if self._thread is not None:
+            self._thread.join(timeout=max(1.0, self.poll_interval * 2))
+        if self._thread is not None and not self._transition_seen:
+            print(
+                "ESP32 USB status: no COM-port transition observed during flash; "
+                "the Portenta programs the ESP32 over UART",
+                flush=True,
+            )
 
 
 class HttpJsonError(RuntimeError):
@@ -589,7 +852,19 @@ def print_interrupted_recovery(
     )
 
 
+def print_flash_finished(
+    flash_started: float,
+    total_started: float,
+    state: str,
+) -> None:
+    finished_at = time.perf_counter()
+    print(f"flash finished: {finished_at - flash_started:.2f} seconds", flush=True)
+    print(f"total time: {finished_at - total_started:.2f} seconds", flush=True)
+    print(state, flush=True)
+
+
 def main() -> None:
+    total_started = time.perf_counter()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", required=True, help="Portenta hostname or IP address")
     parser.add_argument("--port", type=int, default=8080, help="Portenta HTTP port")
@@ -646,6 +921,7 @@ def main() -> None:
         print_session(session_id)
 
     recovery_uses_resume = bool(args.resume)
+    usb_monitor: Esp32UsbMonitor | None = None
     try:
         if args.session_id and args.resume:
             validate_resume_session(base_url, session_id, manifest)
@@ -671,6 +947,8 @@ def main() -> None:
             flush=True,
         )
 
+        usb_monitor = Esp32UsbMonitor(target_name)
+        usb_monitor.start()
         flash_started = time.perf_counter()
         print("flash started...", flush=True)
         try:
@@ -693,16 +971,22 @@ def main() -> None:
                 f"state={status['state']} progress={status['progress']} detail={status['detail']}"
             )
             if status["state"] in {"completed", "failed"}:
+                if (
+                    status["state"] == "completed"
+                    and not usb_monitor.wait_for_reappearance()
+                ):
+                    usb_monitor.stop()
+                    raise SystemExit(1)
+                usb_monitor.stop()
                 print_flash_verification(status)
-                print(
-                    f"flash finished: {time.perf_counter() - flash_started:.2f} seconds",
-                    flush=True,
-                )
+                print_flash_finished(flash_started, total_started, status["state"])
                 if status["state"] != "completed":
                     raise SystemExit(1)
                 break
             time.sleep(args.poll_interval)
     except KeyboardInterrupt:
+        if usb_monitor is not None:
+            usb_monitor.stop()
         print_interrupted_recovery(
             args,
             session_id,
@@ -710,6 +994,8 @@ def main() -> None:
         )
         raise SystemExit(130) from None
     except requests.RequestException as error:
+        if usb_monitor is not None:
+            usb_monitor.stop()
         print_connection_recovery(
             args,
             session_id,
@@ -717,6 +1003,9 @@ def main() -> None:
             resume=recovery_uses_resume,
         )
         raise
+    finally:
+        if usb_monitor is not None:
+            usb_monitor.stop()
 
 
 if __name__ == "__main__":
