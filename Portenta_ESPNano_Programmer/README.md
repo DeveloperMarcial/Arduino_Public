@@ -1,5 +1,15 @@
 # FlashBridge H7: AES-Secured Network-to-Silicon ESP32 Programming
 
+*100% Prompt-Driven Application Code, Built with Codex & GPT-5.6.*
+
+FlashBridge H7's firmware, PC tools, simulator, recovery workflow, and automated
+tests were created through iterative prompting with Codex and GPT-5.6. My direct
+code contribution was limited to editing the main README; I guided the
+requirements, reviewed the results, and validated the system on physical
+hardware.
+
+---
+
 *Securely Upload, Resume, Flash, and Verify.*
 
 > **Security status:** AES encryption is planned. The current implementation
