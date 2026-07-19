@@ -4,11 +4,12 @@ import argparse
 import contextlib
 import io
 import sys
+import tempfile
 import threading
 import time
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +17,8 @@ sys.path.insert(0, str(REPO_ROOT / "tools"))
 
 from esp32_uploader import (  # noqa: E402
     Esp32UsbMonitor,
+    NARRATION_FILES,
+    NarrationPlayer,
     SerialPortInfo,
     build_resume_command,
     is_esp32_serial_port,
@@ -101,6 +104,86 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
                 "total time: 25.50 seconds",
                 "completed",
             ],
+        )
+
+    def test_completed_narration_runs_before_final_state(self) -> None:
+        output = io.StringIO()
+
+        def narrate() -> None:
+            print("narration played")
+
+        with (
+            patch("esp32_uploader.time.perf_counter", return_value=35.5),
+            contextlib.redirect_stdout(output),
+        ):
+            print_flash_finished(
+                flash_started=30.0,
+                total_started=10.0,
+                state="completed",
+                before_state=narrate,
+            )
+
+        self.assertEqual(
+            output.getvalue().splitlines(),
+            [
+                "flash finished: 5.50 seconds",
+                "total time: 25.50 seconds",
+                "narration played",
+                "completed",
+            ],
+        )
+
+    def test_narration_cues_play_the_bundled_filenames(self) -> None:
+        self.assertEqual(
+            list(NARRATION_FILES.values()),
+            [
+                "Male_Voice01_setup_and_command.wav",
+                "Male_Voice02_uploader_and_staging.wav",
+                "Male_Voice02a_chunk_resume_and_verification.wav",
+                "Male_Voice03_start_flash.wav",
+                "Male_Voice04_flash_done..wav",
+            ],
+        )
+        fake_winsound = Mock()
+        fake_winsound.SND_FILENAME = 1
+        fake_winsound.SND_NODEFAULT = 2
+        fake_winsound.SND_ASYNC = 4
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            narration_dir = Path(temp_dir)
+            for filename in NARRATION_FILES.values():
+                (narration_dir / filename).write_bytes(b"RIFF")
+            player = NarrationPlayer(narration_dir=narration_dir)
+
+            with patch("esp32_uploader.winsound", fake_winsound):
+                player.play("setup", wait=True)
+                player.play_sequence(("upload", "transfer"))
+                player._sequence_thread.join(timeout=1)
+                player.play("flash")
+                player.play("completed", wait=True)
+
+        played_paths = [
+            Path(call.args[0]).name
+            for call in fake_winsound.PlaySound.call_args_list
+        ]
+        self.assertEqual(played_paths, list(NARRATION_FILES.values()))
+        self.assertEqual(
+            fake_winsound.PlaySound.call_args_list[0].args[1],
+            fake_winsound.SND_FILENAME | fake_winsound.SND_NODEFAULT,
+        )
+        self.assertEqual(
+            fake_winsound.PlaySound.call_args_list[1].args[1],
+            fake_winsound.SND_FILENAME | fake_winsound.SND_NODEFAULT,
+        )
+        self.assertEqual(
+            fake_winsound.PlaySound.call_args_list[2].args[1],
+            fake_winsound.SND_FILENAME | fake_winsound.SND_NODEFAULT,
+        )
+        self.assertEqual(
+            fake_winsound.PlaySound.call_args_list[3].args[1],
+            fake_winsound.SND_FILENAME
+            | fake_winsound.SND_NODEFAULT
+            | fake_winsound.SND_ASYNC,
         )
 
     def test_nano_usb_port_is_distinguished_from_portenta(self) -> None:

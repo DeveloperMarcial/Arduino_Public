@@ -47,3 +47,33 @@ PlatformIO, esptool, compilers, upload utilities, and board packages are externa
 development tools. They are installed separately and remain subject to their
 respective upstream licenses. They are not relicensed under this project's MIT
 License.
+
+## Piper and LibriTTS Narration
+
+- Project: Piper text-to-speech engine
+- Copyright: Open Home Foundation and Piper contributors
+- License: GNU General Public License v3.0
+- Use: External development tool used to generate the WAV narration files
+- Source and license: https://github.com/OHF-Voice/piper1-gpl
+
+Piper is installed separately and is not vendored in this repository.
+
+- Voice model: `en_US-libritts-high`
+- Model repository: https://huggingface.co/rhasspy/piper-voices
+- Selected male model speaker: `p4535` (source reader: Brett W. Downey)
+- Training dataset: LibriTTS, trained from scratch on `train-clean-360`
+- Dataset authors: Heiga Zen, Viet Dang, Rob Clark, Yu Zhang, Ron J. Weiss,
+  Ye Jia, Zhifeng Chen, and Yonghui Wu
+- Dataset license: Creative Commons Attribution 4.0 International
+- Dataset source: https://www.openslr.org/60/
+- License: https://creativecommons.org/licenses/by/4.0/
+
+The generated WAV narration files use the LibriTTS high-quality Piper voice.
+The model card is included under `video_narration/`. The 137 MB ONNX model is
+downloaded by the generation script and intentionally excluded from Git.
+
+The narration is synthetic. Naming a source reader documents model provenance
+and does not state or imply that the reader recorded, participated in, or
+endorsed this project. LibriVox states that its recordings are public domain in
+the United States:
+https://librivox.org/pages/public-domain/

@@ -43,11 +43,21 @@ $includedDirectories = @(
     "tests/",
     "tools/"
 )
+$narrationFiles = @(
+    "video_narration/Male_Voice01_setup_and_command.wav",
+    "video_narration/Male_Voice02_uploader_and_staging.wav",
+    "video_narration/Male_Voice02a_chunk_resume_and_verification.wav",
+    "video_narration/Male_Voice03_start_flash.wav",
+    "video_narration/Male_Voice04_flash_done..wav"
+)
 
 function Test-JudgeFile {
     param([string]$RelativePath)
 
     $normalized = $RelativePath.Replace("\", "/")
+    if ($normalized.StartsWith("video_narration/", [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $narrationFiles -contains $normalized
+    }
     if ($rootFiles -contains $normalized) {
         return $true
     }

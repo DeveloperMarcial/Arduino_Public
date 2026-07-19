@@ -16,6 +16,11 @@ __pycache__/
 .venv/
 venv/
 
+# Local Piper voice models exceed normal GitHub file limits
+video_narration/*.onnx
+video_narration/*.onnx.json
+video_narration/*.part
+
 # Local logs and generated output
 *.log
 .portenta-sim/

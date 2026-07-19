@@ -23,6 +23,11 @@ try:
 except ImportError:
     serial_list_ports = None
 
+try:
+    import winsound
+except ImportError:
+    winsound = None
+
 
 DEFAULT_TIMEOUT      = 10
 FLASH_TIMEOUT        = 120
@@ -36,6 +41,14 @@ STUB_DATA_IMAGE_NAME = "__stub_data.bin"
 SESSION_ID_PATTERN   = re.compile(r"sess-[0-9a-fA-F]{8}")
 ARDUINO_NANO_ESP32_USB_ID = (0x2341, 0x0070)
 ESPRESSIF_USB_VENDOR_ID = 0x303A
+NARRATION_DIR = REPO_ROOT / "video_narration"
+NARRATION_FILES = {
+    "setup": "Male_Voice01_setup_and_command.wav",
+    "upload": "Male_Voice02_uploader_and_staging.wav",
+    "transfer": "Male_Voice02a_chunk_resume_and_verification.wav",
+    "flash": "Male_Voice03_start_flash.wav",
+    "completed": "Male_Voice04_flash_done..wav",
+}
 
 
 @dataclass(frozen=True)
@@ -70,6 +83,71 @@ class SerialPortInfo:
     @property
     def identity(self) -> tuple[str, int | None, int | None, str | None]:
         return (self.device.upper(), self.vid, self.pid, self.serial_number)
+
+
+class NarrationPlayer:
+    def __init__(
+        self,
+        *,
+        enabled: bool = True,
+        narration_dir: Path = NARRATION_DIR,
+    ) -> None:
+        self.enabled = enabled
+        self.narration_dir = narration_dir
+        self._unavailable_reported = False
+        self._stop_event = threading.Event()
+        self._sequence_thread: threading.Thread | None = None
+
+    def play(self, cue: str, *, wait: bool = False) -> None:
+        if not self.enabled:
+            return
+        if winsound is None:
+            if not self._unavailable_reported:
+                print(
+                    "narration: Windows WAV playback is unavailable on this system",
+                    flush=True,
+                )
+                self._unavailable_reported = True
+            return
+
+        path = self.narration_dir / NARRATION_FILES[cue]
+        if not path.is_file():
+            print(f"narration: WAV file not found: {path}", flush=True)
+            return
+
+        flags = winsound.SND_FILENAME | winsound.SND_NODEFAULT
+        if not wait:
+            flags |= winsound.SND_ASYNC
+        try:
+            winsound.PlaySound(str(path), flags)
+        except RuntimeError as error:
+            print(f"narration: unable to play {path.name}: {error}", flush=True)
+
+    def play_sequence(self, cues: Iterable[str]) -> None:
+        if not self.enabled:
+            return
+
+        cue_list = tuple(cues)
+
+        def run() -> None:
+            for cue in cue_list:
+                if self._stop_event.is_set():
+                    break
+                self.play(cue, wait=True)
+
+        self._sequence_thread = threading.Thread(
+            target=run,
+            name="uploader-narration",
+            daemon=True,
+        )
+        self._sequence_thread.start()
+
+    def stop(self) -> None:
+        self._stop_event.set()
+        if self.enabled and winsound is not None:
+            winsound.PlaySound(None, 0)
+        if self._sequence_thread is not None:
+            self._sequence_thread.join(timeout=1.0)
 
 
 def read_serial_ports(
@@ -790,6 +868,8 @@ def build_recovery_command(
     ]
     if args.erase:
         lines.append("  --erase `")
+    if getattr(args, "no_narration", False):
+        lines.append("  --no-narration `")
     if session_id is not None:
         lines.append(f"  --session-id {normalize_session_id(session_id)} `")
     if resume:
@@ -856,15 +936,18 @@ def print_flash_finished(
     flash_started: float,
     total_started: float,
     state: str,
+    *,
+    before_state: Callable[[], None] | None = None,
 ) -> None:
     finished_at = time.perf_counter()
     print(f"flash finished: {finished_at - flash_started:.2f} seconds", flush=True)
     print(f"total time: {finished_at - total_started:.2f} seconds", flush=True)
+    if before_state is not None:
+        before_state()
     print(state, flush=True)
 
 
 def main() -> None:
-    total_started = time.perf_counter()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", required=True, help="Portenta hostname or IP address")
     parser.add_argument("--port", type=int, default=8080, help="Portenta HTTP port")
@@ -894,6 +977,11 @@ def main() -> None:
     parser.add_argument("--manifest-out", type=Path, help="Optional path to write the generated manifest JSON")
     parser.add_argument("--session-id", help="Reuse an existing session instead of creating a new one")
     parser.add_argument("--resume", action="store_true", help="Resume an existing session by uploading only missing chunks")
+    parser.add_argument(
+        "--no-narration",
+        action="store_true",
+        help="Disable the bundled Windows WAV narration",
+    )
     args = parser.parse_args()
 
     target_name = normalize_target(args.target)
@@ -908,6 +996,10 @@ def main() -> None:
     if args.resume and not args.session_id:
         raise SystemExit("--resume requires --session-id")
 
+    narration = NarrationPlayer(enabled=not args.no_narration)
+    narration.play("setup", wait=True)
+    total_started = time.perf_counter()
+
     session_id: str | None = None
     if args.session_id:
         session_id = normalize_session_id(args.session_id)
@@ -920,6 +1012,7 @@ def main() -> None:
             raise
         print_session(session_id)
 
+    narration.play_sequence(("upload", "transfer"))
     recovery_uses_resume = bool(args.resume)
     usb_monitor: Esp32UsbMonitor | None = None
     try:
@@ -951,6 +1044,7 @@ def main() -> None:
         usb_monitor.start()
         flash_started = time.perf_counter()
         print("flash started...", flush=True)
+        narration.play("flash")
         try:
             trigger_flash(base_url, session_id)
         except requests.Timeout:
@@ -979,12 +1073,22 @@ def main() -> None:
                     raise SystemExit(1)
                 usb_monitor.stop()
                 print_flash_verification(status)
-                print_flash_finished(flash_started, total_started, status["state"])
+                print_flash_finished(
+                    flash_started,
+                    total_started,
+                    status["state"],
+                    before_state=(
+                        lambda: narration.play("completed", wait=True)
+                        if status["state"] == "completed"
+                        else None
+                    ),
+                )
                 if status["state"] != "completed":
                     raise SystemExit(1)
                 break
             time.sleep(args.poll_interval)
     except KeyboardInterrupt:
+        narration.stop()
         if usb_monitor is not None:
             usb_monitor.stop()
         print_interrupted_recovery(
@@ -994,6 +1098,7 @@ def main() -> None:
         )
         raise SystemExit(130) from None
     except requests.RequestException as error:
+        narration.stop()
         if usb_monitor is not None:
             usb_monitor.stop()
         print_connection_recovery(
@@ -1004,6 +1109,7 @@ def main() -> None:
         )
         raise
     finally:
+        narration.stop()
         if usb_monitor is not None:
             usb_monitor.stop()
 
