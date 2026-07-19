@@ -7,8 +7,13 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $sourceRoot = [System.IO.Path]::GetFullPath($PSScriptRoot)
+$sourceRepositoryRoot = [System.IO.Path]::GetFullPath(
+    (Split-Path $sourceRoot -Parent)
+)
 if ([string]::IsNullOrWhiteSpace($Destination)) {
-    $Destination = Join-Path (Split-Path $sourceRoot -Parent) "Portenta_ESPNano_Programmer"
+    $Destination = Join-Path (
+        Split-Path $sourceRepositoryRoot -Parent
+    ) "Portenta_ESPNano_Programmer"
 }
 $destinationRoot = [System.IO.Path]::GetFullPath($Destination)
 
@@ -102,7 +107,7 @@ foreach ($relativePath in $filesToCopy) {
     }
 }
 
-$licenseSource = Join-Path (Split-Path $sourceRoot -Parent) "LICENSE"
+$licenseSource = Join-Path $sourceRepositoryRoot "LICENSE"
 $licenseDestination = Join-Path $destinationRoot "LICENSE"
 if (Test-Path -LiteralPath $licenseSource -PathType Leaf) {
     if ($PSCmdlet.ShouldProcess($licenseDestination, "Copy parent repository license")) {
