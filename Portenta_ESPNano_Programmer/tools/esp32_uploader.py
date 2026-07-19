@@ -51,6 +51,12 @@ NARRATION_FILES = {
 }
 
 
+def upload_narration_cues(host: str) -> tuple[str, ...]:
+    if host == "127.0.0.1":
+        return ("upload",)
+    return ("upload", "transfer")
+
+
 @dataclass(frozen=True)
 class TargetConfig:
     manifest_target: str
@@ -1012,7 +1018,7 @@ def main() -> None:
             raise
         print_session(session_id)
 
-    narration.play_sequence(("upload", "transfer"))
+    narration.play_sequence(upload_narration_cues(args.host))
     recovery_uses_resume = bool(args.resume)
     usb_monitor: Esp32UsbMonitor | None = None
     try:

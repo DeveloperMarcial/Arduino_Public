@@ -25,6 +25,7 @@ from esp32_uploader import (  # noqa: E402
     print_flash_finished,
     print_interrupted_recovery,
     print_known_sessions,
+    upload_narration_cues,
     usb_port_transition_messages,
 )
 
@@ -184,6 +185,15 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
             fake_winsound.SND_FILENAME
             | fake_winsound.SND_NODEFAULT
             | fake_winsound.SND_ASYNC,
+        )
+
+    def test_local_simulator_skips_extended_transfer_narration(self) -> None:
+        self.assertEqual(upload_narration_cues("127.0.0.1"), ("upload",))
+
+    def test_hardware_host_plays_extended_transfer_narration(self) -> None:
+        self.assertEqual(
+            upload_narration_cues("192.168.1.178"),
+            ("upload", "transfer"),
         )
 
     def test_nano_usb_port_is_distinguished_from_portenta(self) -> None:
