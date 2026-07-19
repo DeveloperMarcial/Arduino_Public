@@ -33,7 +33,8 @@ $rootFiles = @(
     "Pinouts.drawio",
     "Pinouts.png",
     "platformio.ini",
-    "README.md"
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
 )
 $includedDirectories = @(
     "examples/",
@@ -108,7 +109,10 @@ foreach ($relativePath in $filesToCopy) {
     }
 }
 
-$licenseSource = Join-Path $sourceRepositoryRoot "LICENSE"
+$licenseSource = Join-Path $sourceRoot "LICENSE"
+if (-not (Test-Path -LiteralPath $licenseSource -PathType Leaf)) {
+    $licenseSource = Join-Path $sourceRepositoryRoot "LICENSE"
+}
 $licenseDestination = Join-Path $destinationRoot "LICENSE"
 if (Test-Path -LiteralPath $licenseSource -PathType Leaf) {
     if ($PSCmdlet.ShouldProcess($licenseDestination, "Copy parent repository license")) {

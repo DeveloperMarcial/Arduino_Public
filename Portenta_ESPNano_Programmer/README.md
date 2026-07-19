@@ -1,5 +1,11 @@
 # Portenta H7 Remote ESP32 Programmer
 
+## What It Does
+
+This project turns an Arduino Portenta H7 into a network-connected, production-style programmer for a remote ESP32. A PC uploads bootloader, partition, and application images over HTTP; the Portenta stages them in QSPI, drives the ESP32 boot pins, flashes each image at its required address over UART, and verifies what actually landed in flash.
+
+Why it rocks: this is not a fire-and-forget uploader. Transfers are chunked, hash-checked, and resumable after an interruption. Staged images are verified with SHA-256, flashed images are read back and verified with MD5, and every phase exposes useful progress and errors. The same uploader works over Ethernet or WiFi, while the included PC simulator lets judges exercise sessions, resume, flashing, and verification without owning either board.
+
 https://store-usa.arduino.cc/products/portenta-h7
 https://content.arduino.cc/assets/Pinout-PortentaH7_latest.pdf
 
