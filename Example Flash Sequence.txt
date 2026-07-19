@@ -1,0 +1,64 @@
+This is the USB Serial Output on the Portenta
+--------------------------------------------------------------------------
+State=0 Progress=0 Detail=HTTP server listening on WiFi 192.168.1.178:8080
+State=0 Progress=0 Detail=HTTP server listening on WiFi 192.168.1.178:8080
+State=2 Progress=5 Detail=Manifest accepted
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=3 Progress=25 Detail=Chunk staged
+State=4 Progress=100 Detail=All images uploaded and verified
+Entering ESP ROM bootloader: BOOT low, pulsing EN
+Temporary raw ESP UART bytes after bootloader reset:
+0x45 0x53 0x50 0x2D 0x52 0x4F 0x4D 0x3A 0x65 0x73 0x70 0x33 0x32 0x73 0x33 0x2D 0x32 0x30 0x32 0x31 0x30 0x33 0x32 0x37 0x0D 0x0A 0x42 0x75 0x69 0x6C 0x64 0x3A 0x4D 0x61 0x72 0x20 0x32 0x37 0x20 0x32 0x30 0x32 0x31 0x0D 0x0A 0x72 0x73 0x74 0x3A 0x30 0x78 0x31 0x20 0x28 0x50 0x4F 0x57 0x45 0x52 0x4F 0x4E 0x29 0x2C 0x62 0x6F 0x6F 0x74 0x3A 0x30 0x78 0x30 0x20 0x28 0x44 0x4F 0x57 0x4E 0x4C 0x4F 0x41 0x44 0x28 0x55 0x53 0x42 0x2F 0x55 0x41 0x52 0x54 0x30 0x29 0x29 0x0D 0x0A 0x77 0x61 0x69 0x74 0x69 0x6E 0x67 0x20 0x66 0x6F 0x72 0x20 0x64 0x6F 0x77 0x6E 0x6C 0x6F 0x61 0x64 0x0D 0x0A
+Synchronizing with ESP ROM bootloader, attempt 1/20
+ESP ROM SYNC response: ok=false direction=0x0 command=0x0 size=0 value=0x0 status_length=0 data_length=0
+Synchronizing with ESP ROM bootloader, attempt 2/20
+ESP ROM SYNC response: ok=true direction=0x1 command=0x8 size=4 value=0x20120707 status_length=2 status=[0x0,0x0] data_length=0
+Discarding extra ESP ROM SYNC response: ok=true direction=0x1 command=0x8 size=4 value=0x20120707 status_length=2 status=[0x0,0x0] data_length=0
+Discarding extra ESP ROM SYNC response: ok=true direction=0x1 command=0x8 size=4 value=0x20120707 status_length=2 status=[0x0,0x0] data_length=0
+Discarding extra ESP ROM SYNC response: ok=true direction=0x1 command=0x8 size=4 value=0x20120707 status_length=2 status=[0x0,0x0] data_length=0
+Discarding extra ESP ROM SYNC response: ok=true direction=0x1 command=0x8 size=4 value=0x20120707 status_length=2 status=[0x0,0x0] data_length=0
+Discarding extra ESP ROM SYNC response: ok=true direction=0x1 command=0x8 size=4 value=0x20120707 status_length=2 status=[0x0,0x0] data_length=0
+Discarding extra ESP ROM SYNC response: ok=true direction=0x1 command=0x8 size=4 value=0x20120707 status_length=2 status=[0x0,0x0] data_length=0
+Discarding extra ESP ROM SYNC response: ok=true direction=0x1 command=0x8 size=4 value=0x20120707 status_length=2 status=[0x0,0x0] data_length=0
+ESP ROM bootloader synchronized
+ESP ROM FLASH_END produced no usable reply; continuing with hardware reboot
+ESP ROM FLASH_END response: ok=false direction=0x1 command=0x4 size=4 value=0x0 status_length=2 status=[0x1,0x6] data_length=0
+Rebooting ESP target normally
+State=6 Progress=100 Detail=Flash and readback verification successful

@@ -1,0 +1,23 @@
+{
+  "target": "esp32s3",
+  "flash_size": 16777216,
+  "baud": 460800,
+  "erase": false,
+  "images": [
+    {
+      "name": "bootloader.bin",
+      "offset": 0,
+      "size": 24576
+    },
+    {
+      "name": "partitions.bin",
+      "offset": 32768,
+      "size": 3072
+    },
+    {
+      "name": "app.bin",
+      "offset": 65536,
+      "size": 917504
+    }
+  ]
+}
