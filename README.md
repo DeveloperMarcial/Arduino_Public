@@ -32,7 +32,7 @@ We supplied the product requirements, hardware knowledge, engineering decisions,
 
 ## Demonstration
 
-[Watch the narrated hardware demonstration on YouTube](YOUTUBE_VIDEO_URL)
+[Watch the narrated hardware demonstration on YouTube](https://youtu.be/MSb_y7rtKms)
 
 For the simulator demo, physical wiring, uploader commands, and complete technical documentation, see the [FlashBridge H7 README](Portenta_ESPNano_Programmer/README.md).
 
