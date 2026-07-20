@@ -8,6 +8,7 @@ import threading
 import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
@@ -16,7 +17,12 @@ from urllib.request import Request, urlopen
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "tools"))
 
-from portenta_sim import PortentaSimulator, SimulatorConfig, SimulatorHttpServer  # noqa: E402
+from portenta_sim import (  # noqa: E402
+    PortentaSimulator,
+    SimulatorConfig,
+    SimulatorHttpServer,
+    _atomic_json,
+)
 
 
 class RunningSimulator:
@@ -112,6 +118,29 @@ class PortentaSimulatorHttpTests(unittest.TestCase):
                 return status
             time.sleep(0.01)
         self.fail("simulated flash did not finish")
+
+    def test_atomic_state_save_retries_transient_windows_file_lock(self) -> None:
+        path = self.storage / "state.json"
+        real_replace = __import__("os").replace
+        attempts = 0
+
+        def intermittently_locked(source: Path, destination: Path) -> None:
+            nonlocal attempts
+            attempts += 1
+            if attempts < 3:
+                raise PermissionError(5, "Access is denied")
+            real_replace(source, destination)
+
+        with (
+            patch("portenta_sim.os.replace", side_effect=intermittently_locked),
+            patch("portenta_sim.time.sleep") as sleep,
+        ):
+            _atomic_json(path, {"simulation": True})
+
+        self.assertEqual({"simulation": True}, json.loads(path.read_text(encoding="utf-8")))
+        self.assertEqual(3, attempts)
+        self.assertEqual(2, sleep.call_count)
+        self.assertEqual([], list(self.storage.glob(".*.tmp")))
 
     def test_successful_upload_and_flash_preserves_offset_and_hashes(self) -> None:
         data = b"judge-demo-firmware"

@@ -1,0 +1,18 @@
+#VOICE #0
+"Flash Bridge is a one hundred percent prompt-driven application codebase built with Codex and G P T five point six. Through iterative prompting, we created the firmware, desktop computer tools, simulator, recovery workflow, and automated tests. Flash Bridge securely uploads, resumes, flashes, and verifies E S P thirty two, firmware over Why Fi through an Arduino Portenta H seven, without requiring a direct desktop computer to E S P thirty two, U S B programming cable. We defined the requirements, reviewed the results, and validated the system on physical hardware. The only key board work we did was to edit the main repo root Read Me."
+
+#VOICE #1
+"In the bottom of the video you can see the Portenta on the right and an E S P thirty two, of the left. You can see the yellow L E D on the E S P thirty two, flashing in a sequence of three short flashes. We will upload a different application that changes this L E D pattern. On the desktop computer screen we can see the Power Shell command specifies the Portenta's address on the local Why Fi network, the E S P thirty two, target profile, and the required firmware images. We start the Python uploader on the desktop computer."
+    
+#VOICE #2
+"The uploader first sends a manifest telling the Portenta exactly what to flash, where to put it, and how to verify each image. The desktop computer then uploads the binary images to the Portenta over Why Fi in resumable chunks. The Portenta validates the chunks and stores the images in Portenta's internal Q S P eye, backed staging area. The desktop computer to Portenta data transfer has started over Why Fi."
+
+    
+#VOICE #2a
+"While the firmware images are being transferred, each file is divided into small, numbered chunks. The Portenta reecords every chunk it receives, so an interrupted upload does not have to start over. When the connection returns, the uploader asks which chunks are already presant and sends only the missing ones. Each completed image is then checked against the Shaw two fifty six value from the manifest before flashing is allowed. This protects against incomplete transfers, accidental corruption, and using the wrong firmware file. The staged files remain in the Portenta's Q S P eye, backed storage until the complete image set has been received and verified. In a moment, the Portenta will place the E S P thirty two, into programming mode and begin writing each image to its assigned flash address."
+    
+#VOICE #3
+"The Portenta places the E S P thirty two, into programming mode, flashes the staged images over UART (not the USB UART), and verifies what was written. Flashing of the E S P thirty two, has started. You will notice the E S P thirty two, L E D is no longer flashing since the program is no longer running as we program the E S P thirty two."
+    
+#VOICE #4
+"The E S P thirty two, boots up, and the uploader reports that flashing and verification are complete. The E S P thirty two, L E D now flashes once for a long interval, followed by two short flashes. This proves we re-programmed the E S P thirty two, from the Portenta who recieved binary images from a desktop computer over Why Fi."

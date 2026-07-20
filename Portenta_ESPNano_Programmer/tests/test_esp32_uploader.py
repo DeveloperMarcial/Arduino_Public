@@ -86,7 +86,7 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
         self.assertIn("sess-a1b2c3d4 state=uploading", text)
         self.assertIn("sess-deadbeef state=completed", text)
 
-    def test_total_time_prints_immediately_after_flash_time(self) -> None:
+    def test_total_time_reports_chunk_duration_after_flash_time(self) -> None:
         output = io.StringIO()
         with (
             patch("esp32_uploader.time.perf_counter", return_value=35.5),
@@ -94,7 +94,7 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
         ):
             print_flash_finished(
                 flash_started=30.0,
-                total_started=10.0,
+                chunk_elapsed=4.25,
                 state="completed",
             )
 
@@ -102,7 +102,7 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
             output.getvalue().splitlines(),
             [
                 "flash finished: 5.50 seconds",
-                "total time: 25.50 seconds",
+                "total time: 4.25 seconds",
                 "completed",
             ],
         )
@@ -119,7 +119,7 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
         ):
             print_flash_finished(
                 flash_started=30.0,
-                total_started=10.0,
+                chunk_elapsed=4.25,
                 state="completed",
                 before_state=narrate,
             )
@@ -128,7 +128,7 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
             output.getvalue().splitlines(),
             [
                 "flash finished: 5.50 seconds",
-                "total time: 25.50 seconds",
+                "total time: 4.25 seconds",
                 "narration played",
                 "completed",
             ],

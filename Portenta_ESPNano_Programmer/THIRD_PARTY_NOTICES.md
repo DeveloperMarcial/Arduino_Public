@@ -69,8 +69,10 @@ Piper is installed separately and is not vendored in this repository.
 - License: https://creativecommons.org/licenses/by/4.0/
 
 The generated WAV narration files use the LibriTTS high-quality Piper voice.
-The model card is included under `video_narration/`. The 137 MB ONNX model is
-downloaded by the generation script and intentionally excluded from Git.
+The [model card](video_narration/MODEL_CARD_en_US-libritts-high.md) is included
+under `video_narration/`. The 133 MB ONNX model is intentionally excluded from
+Git; the [narration README](video_narration/README.md) provides exact,
+hash-verified download and regeneration instructions.
 
 The narration is synthetic. Naming a source reader documents model provenance
 and does not state or imply that the reader recorded, participated in, or

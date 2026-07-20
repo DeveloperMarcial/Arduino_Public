@@ -1,8 +1,8 @@
 # FlashBridge: Network-to-Silicon ESP32 Programming
 
-*100% Prompt-Driven Application Code, Built with Codex & GPT-5.6.*
+*100% Prompt-Driven Application Code, Built with Codex, GPT-5-4 & GPT-5.6.*
 
-FlashBridge H7's firmware, PC tools, simulator, recovery workflow, and automated
+FlashBridge's firmware, PC tools, simulator, recovery workflow, and automated
 tests were created through iterative prompting with Codex and GPT-5.6. My direct
 code contribution was limited to editing the main README; I guided the
 requirements, reviewed the results, and validated the system on physical
@@ -10,12 +10,12 @@ hardware.
 
 ---
 
-*Securely Upload, Resume, Flash, and Verify.*
+*Reliably Upload, Resume, Flash, and Verify.*
 
-## Desktop Simulator Simulator for Judges of the OpenAI Build Week(the “Hackathon”)
+## Desktop Simulator for OpenAI Build Week Judges
 
 ### Improvements Made with Codex & GPT-5.6
-FlashBridge H7 existed before this collaboration, including its core product idea, hardware architecture, and physical Portenta-to-ESP32 programming workflow. We used Codex & GPT-5.6 as an implementation partner to turn that foundation into a more reliable, testable, recoverable, and judge-ready system.
+FlashBridge existed before this collaboration, including its core product idea, hardware architecture, and physical Portenta-to-ESP32 programming workflow. We used Codex & GPT-5.6 as an implementation partner to turn that foundation into a more reliable, testable, recoverable, and judge-ready system.
 
 **How we collaborated:** We provided the goals, constraints, hardware knowledge, acceptance criteria, and repeated feedback from real-device testing. Before making changes, Codex inspected the existing C++ firmware, Python uploader, HTTP protocol, build configuration, and documentation. GPT-5.6 helped reason across those components, preserve protocol compatibility, identify failure modes, and translate our requests into implementation steps. Codex then made the repository changes directly, ran tests and end-to-end exercises, diagnosed failures, refined the implementation, synchronized the judge repository, and managed the requested Git workflow.
 
@@ -32,7 +32,7 @@ FlashBridge H7 existed before this collaboration, including its core product ide
 
 **Our key decisions:** We selected the problem, boards, wiring, pin mapping, target behavior, network workflow, and requirement to keep the real HTTP protocol unchanged. We decided which recovery behavior judges should see, how resume and verification should be presented, which simulator operations must be clearly labeled, and how the project should be positioned. We also performed the physical wiring, Portenta and Nano ESP32 tests, observed USB behavior, reviewed the user-visible results, and requested refinements until the system behaved as intended.
 
-**Final result:** Codex & GPT-5.6 contributed the cross-repository analysis, implementation, tests, debugging, documentation support, narration workflow, video processing, synchronization, and Git execution. We validated the result through 21 automated tests, simulator exercises, hash verification, interrupted-upload recovery, and a narrated physical-hardware demonstration.
+**Final result:** Codex & GPT-5.6 contributed the cross-repository analysis, implementation, tests, debugging, documentation support, narration workflow, video processing, synchronization, and Git execution. We validated the result through 22 automated tests, simulator exercises, hash verification, interrupted-upload recovery, and a narrated physical-hardware demonstration.
 
 * Our review was outcome- and risk-focused rather than a line-by-line inspection of every generated implementation detail.
 * We estimate that we directly reviewed approximately 10% of the code.
@@ -44,7 +44,63 @@ FlashBridge H7 existed before this collaboration, including its core product ide
 #### Actual Hardware Demonstration
 https://youtu.be/MSb_y7rtKms
 
-#### Full Upload Simulation
+#### Judge Quick-Start Prerequisite
+
+From the project repository root, install the PC uploader dependencies before
+running the simulator workflow:
+
+```powershell
+python -m pip install -r tools/requirements.txt
+```
+
+The simulator itself uses Python's standard library. The uploader requires
+`requests`, while `pyserial` enables optional ESP32 USB/COM-port detection and
+reconnection status on supported systems.
+
+#### Judges Automated Demonstration: Full and Resume Uploads
+
+##### Judges Easy Button
+
+Each easy button uses two visible PowerShell terminals. The terminal where the
+judge runs the command displays uploader activity, and a second terminal opens
+automatically for live simulator HTTP and restart activity.
+
+Run the full-upload demonstration:
+
+```powershell
+#Open PowerShell
+#cd <repo_root>
+.\Run-FullUploadSimulation.ps1
+```
+
+Run the interrupted-upload/resume demonstration:
+
+```powershell
+#Open PowerShell
+#cd <repo_root>
+.\Run-ResumeUploadSimulation.ps1
+```
+
+To run both demonstrations consecutively in the same two terminals:
+
+```powershell
+.\Run-JudgeSimulation.ps1
+```
+
+The scripts validate their prerequisites, use the bundled images, and clearly
+label all activity as simulation. In resume mode they capture a real session
+ID, interrupt only after the simulator has persisted some chunks, visibly
+pause for approximately three seconds so judges can see the interrupted state,
+restart the simulator terminal with the same storage, and resume only the
+missing chunks. Terminal 1 prompts when it is safe to close. Use `-Port <port>`
+if local port 8080 is unavailable.
+
+Watch the teal `total time` line in the uploader terminal. It measures only
+the successful chunk-transfer phase. Full uploads every chunk, while Resume
+sends only the chunks still missing after the intentional interruption, so the
+Resume value should be shorter.
+
+##### Judges Manual Demonstration: Full Upload (optional)
 
 `tools/portenta_sim.py` implements the same HTTP routes and status fields as the Portenta firmware so the existing uploader can be demonstrated without hardware. It uses only the Python standard library. Start it from the repository root:
 
@@ -94,7 +150,7 @@ python tools/esp32_uploader.py `
 
 The simulator validates image names, offsets, flash bounds, chunk indexes and exact chunk lengths. Once all chunks arrive, it verifies each staged SHA-256. Flashable images are written at their manifest offsets in `.portenta-sim\flash\<target>.bin`, then read back to produce the same `staged_md5`, `flash_md5`, and `flash_verified` fields as the device.
 
-#### Resume Upload Simulation
+##### Judges Manual Demonstration: Resume Upload (optional)
 
 1. Start the persistent simulator:
 
@@ -123,7 +179,7 @@ The simulator validates image names, offsets, flash bounds, chunk indexes and ex
    # When you see "image chunk upload started...", press `Ctrl+Break`.
    ```
 
-3. The simulator in Terminal_1 is now terminated. Then start another upload with the same persistent storage:
+3. In Terminal_1, press `Ctrl+C` to stop the simulator. After it exits, restart it with the same persistent storage:
 
    ```powershell
    # In Terminal_1:
@@ -152,7 +208,10 @@ The simulator validates image names, offsets, flash bounds, chunk indexes and ex
 5. Watch `flashing` progress details followed by `completed`.
 * The uploader prints matching `staged_md5` and `flash_md5` values with `flash_verified=True`.
 * Re-run the uploader and allow it to finish.
-  * You will see the "total time" is longer verifying the _resume_ option works.
+  * Compare the chunk-only `total time` with a full upload. Resume should be
+    shorter because it sends only missing chunks.
+
+##### Judges Unit Tests
 
 Run the automated simulator checks with:
 
@@ -168,7 +227,7 @@ such as `pytest` is not required. `tools/run_tests.py`:
 - discovers test modules and test cases under `tests`
 - uses verbose output so every test reports `ok`, `FAIL`, or `ERROR`
 - preserves a failing exit code for automation
-- ends with a concise result such as `11 of 11 PASSED`
+- ends with a concise result such as `22 of 22 PASSED`
 
 These tests start local simulator servers on temporary ports, use temporary storage directories, exercise upload, resume, validation, failure, session-listing, and flash-verification behavior, then clean up their temporary resources. They do not contact a physical Portenta or ESP32 and do not flash real hardware. A successful run ends with `OK` and the pass-count summary; failures include a traceback identifying the failed test and assertion.
 
@@ -303,7 +362,7 @@ On systems with `pyserial` installed, the uploader also identifies the Arduino N
 
 On Windows, the uploader plays the bundled WAV narration clips at the Codex/GPT-5.6 introduction, setup, upload/staging, extended chunk-transfer, flash-start, and verified-completion phases. Voice00 plays before Voice01, while Voice02 and the extended transfer explanation run sequentially in the background as the upload continues. Use `--no-narration` when running unattended or when spoken narration is not wanted.
 
-The six active narration files use the `Male_Voice*.wav` names under `video_narration/`. The judges export deliberately includes only those finished WAV files; local voice models, model configuration, source text, and regeneration tools are not published.
+The six active narration files use the `Male_Voice*.wav` names under `video_narration/`. The 133 MB ONNX voice model and its JSON configuration remain excluded from Git, while the [narration README](video_narration/README.md), model card, source text, and regeneration tools provide exact download and reproduction instructions.
 
 The narration is synthetic and was generated with Piper and the `en_US-libritts-high` model; it is not a recording made for this project by, or an endorsement from, any LibriTTS source reader. The model uses LibriTTS under CC BY 4.0. Attribution and third-party terms are recorded in [Third-Party Notices](THIRD_PARTY_NOTICES.md).
 
@@ -499,7 +558,10 @@ This repo has two Portenta firmware environments in `platformio.ini`:
 Connect the Portenta to your PC over USB.
 
 Open a terminal in the repo root:
-`c:\Users\<user>\OneDrive\Documents\GitHub\Arduino\Portenta_ESP-EYE_Programmer`
+
+```powershell
+cd <path-to-project-root>
+```
 
 Put the Portenta into bootloader mode if needed.
 Usually this means double-pressing reset until the bootloader LED pattern changes.
@@ -597,7 +659,8 @@ python tools/esp32_uploader.py `
 Our Test command:
 NOTE: So relative paths are resolved from the folder where you run the Python command, and absolute paths work from anywhere.
 
-Our compiled Blinky app that we will load on the Nano is here: `C:\Users\mmarc\AppData\Local\arduino\sketches\9ADE7FFE281152CE1367D725B05AA39B`
+The compiled Blinky images used by this demonstration are included in the
+hash-named folders under `.\images\`.
 
 ```powershell
 # Generic Upload**
@@ -634,9 +697,9 @@ Or point to absolute path:
 # Upload with Absolute Paths
 python tools/esp32_uploader.py `
     --host 192.168.1.178 --port 8080 --target arduino_nano_esp32 --baud 460800 `
-    --image bootloader:C:\Users\mmarc\OneDrive\Documents\PlatformIO\Projects\260425-115203-arduino_nano_esp32\.pio\build\arduino_nano_esp32\bootloader.bin `
-    --image partitions:C:\Users\mmarc\OneDrive\Documents\PlatformIO\Projects\260425-115203-arduino_nano_esp32\.pio\build\arduino_nano_esp32\partitions.bin `
-    --image app0:C:\Users\mmarc\OneDrive\Documents\PlatformIO\Projects\260425-115203-arduino_nano_esp32\.pio\build\arduino_nano_esp32\firmware.bin
+    --image bootloader:C:\path\to\arduino_nano_esp32\bootloader.bin `
+    --image partitions:C:\path\to\arduino_nano_esp32\partitions.bin `
+    --image app0:C:\path\to\arduino_nano_esp32\firmware.bin
 ```
 What the Python script does:
 

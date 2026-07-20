@@ -31,6 +31,7 @@ MAX_IMAGE_NAME = 32
 MAX_CHUNK_SIZE = 1536
 MAX_CHUNKS = 8192
 MAX_FLASH_SIZE = 128 * 1024 * 1024
+ATOMIC_REPLACE_ATTEMPTS = 10
 
 
 class ProtocolError(Exception):
@@ -42,9 +43,21 @@ class ProtocolError(Exception):
 
 
 def _atomic_json(path: Path, value: dict[str, Any]) -> None:
-    temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(value, indent=2, sort_keys=True), encoding="utf-8")
-    os.replace(temporary, path)
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        temporary.write_text(json.dumps(value, indent=2, sort_keys=True), encoding="utf-8")
+        for attempt in range(ATOMIC_REPLACE_ATTEMPTS):
+            try:
+                os.replace(temporary, path)
+                return
+            except PermissionError:
+                if attempt == ATOMIC_REPLACE_ATTEMPTS - 1:
+                    raise
+                # OneDrive and antivirus scanners can briefly lock state.json.
+                time.sleep(0.05 * (attempt + 1))
+    finally:
+        if temporary.exists():
+            temporary.unlink()
 
 
 def _digest(path: Path, algorithm: str, size: int) -> str:

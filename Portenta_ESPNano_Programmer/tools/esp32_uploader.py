@@ -941,14 +941,14 @@ def print_interrupted_recovery(
 
 def print_flash_finished(
     flash_started: float,
-    total_started: float,
+    chunk_elapsed: float,
     state: str,
     *,
     before_state: Callable[[], None] | None = None,
 ) -> None:
     finished_at = time.perf_counter()
     print(f"flash finished: {finished_at - flash_started:.2f} seconds", flush=True)
-    print(f"total time: {finished_at - total_started:.2f} seconds", flush=True)
+    print(f"total time: {chunk_elapsed:.2f} seconds", flush=True)
     if before_state is not None:
         before_state()
     print(state, flush=True)
@@ -1006,8 +1006,6 @@ def main() -> None:
     narration = NarrationPlayer(enabled=not args.no_narration)
     narration.play("intro", wait=True)
     narration.play("setup", wait=True)
-    total_started = time.perf_counter()
-
     session_id: str | None = None
     if args.session_id:
         session_id = normalize_session_id(args.session_id)
@@ -1043,10 +1041,8 @@ def main() -> None:
             upload_images_resumable(base_url, session_id, upload_images_list, args.chunk_size)
         else:
             upload_images(base_url, session_id, upload_images_list, args.chunk_size)
-        print(
-            f"image chunk upload finished: {time.perf_counter() - chunks_started:.2f} seconds",
-            flush=True,
-        )
+        chunk_elapsed = time.perf_counter() - chunks_started
+        print(f"image chunk upload finished: {chunk_elapsed:.2f} seconds", flush=True)
 
         usb_monitor = Esp32UsbMonitor(target_name)
         usb_monitor.start()
@@ -1083,7 +1079,7 @@ def main() -> None:
                 print_flash_verification(status)
                 print_flash_finished(
                     flash_started,
-                    total_started,
+                    chunk_elapsed,
                     status["state"],
                     before_state=(
                         lambda: narration.play("completed", wait=True)
