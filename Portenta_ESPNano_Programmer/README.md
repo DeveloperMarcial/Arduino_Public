@@ -74,7 +74,7 @@ This project provides a [PlatformIO](https://docs.platformio.org/en/latest/integ
 
 ## Hardware Mapping
 
-Recommended [Portenta wiring](Pinouts.png) when the `Portenta Vision Shield Ethernet` is attached:
+Recommended [Portenta wiring](docs/Pinouts.png) when the `Portenta Vision Shield Ethernet` is attached:
 
 Portenta H7 (USB Up)                                    Arduino Nano ESP32 (USB Up)
 ----------------------------------------------------    ---------------------------------------------------
@@ -133,9 +133,9 @@ The `requests` timeout value applies separately to establishing the connection a
 
 On systems with `pyserial` installed, the uploader also identifies the Arduino Nano ESP32 COM port and watches it while flashing. Windows may remove that COM port when the ESP32 enters programming mode; this is expected because the Portenta performs the actual programming over its UART connection. If the port was present before flashing and disconnects, the uploader waits up to 30 seconds for it to reappear before printing `completed`; a timeout produces a clear USB-status error and does not report completion. Install the uploader dependencies with `python -m pip install -r tools/requirements.txt`.
 
-On Windows, the uploader plays the bundled WAV narration clips at the setup, upload/staging, extended chunk-transfer, flash-start, and verified-completion phases. Voice02 and the extended transfer explanation run sequentially in the background while the upload continues. Use `--no-narration` when running unattended or when spoken narration is not wanted.
+On Windows, the uploader plays the bundled WAV narration clips at the Codex/GPT-5.6 introduction, setup, upload/staging, extended chunk-transfer, flash-start, and verified-completion phases. Voice00 plays before Voice01, while Voice02 and the extended transfer explanation run sequentially in the background as the upload continues. Use `--no-narration` when running unattended or when spoken narration is not wanted.
 
-The five active narration files use the `Male_Voice*.wav` names under `video_narration/`. The judges export deliberately includes only those finished WAV files; local voice models, model configuration, source text, and regeneration tools are not published.
+The six active narration files use the `Male_Voice*.wav` names under `video_narration/`. The judges export deliberately includes only those finished WAV files; local voice models, model configuration, source text, and regeneration tools are not published.
 
 The narration is synthetic and was generated with Piper and the `en_US-libritts-high` model; it is not a recording made for this project by, or an endorsement from, any LibriTTS source reader. The model uses LibriTTS under CC BY 4.0. Attribution and third-party terms are recorded in [Third-Party Notices](THIRD_PARTY_NOTICES.md).
 
@@ -536,7 +536,7 @@ The workflow is:
 
 * Flash this Portenta firmware onto the Portenta.
 * Connect the Portenta to Ethernet or build the WiFi environment and let it join your access point.
-* [Wire the Portenta](Pinouts.png) to the Arduino Nano ESP32 UART/EN/GPIO0 lines.
+* [Wire the Portenta](docs/Pinouts.png) to the Arduino Nano ESP32 UART/EN/GPIO0 lines.
 * [Find the Portenta IP address](#runtime-network-behavior-finding-the-portenta-ip-address) in its startup serial output, or use the Ethernet fallback `192.168.1.177:8080` if DHCP is unavailable.
 * Run `tools/esp32_uploader.py` on your PC with the ESP image files you want staged and flashed.
 

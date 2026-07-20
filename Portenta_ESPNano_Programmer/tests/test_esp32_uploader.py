@@ -138,6 +138,7 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
         self.assertEqual(
             list(NARRATION_FILES.values()),
             [
+                "Male_Voice00_codex_and_gpt.wav",
                 "Male_Voice01_setup_and_command.wav",
                 "Male_Voice02_uploader_and_staging.wav",
                 "Male_Voice02a_chunk_resume_and_verification.wav",
@@ -157,6 +158,7 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
             player = NarrationPlayer(narration_dir=narration_dir)
 
             with patch("esp32_uploader.winsound", fake_winsound):
+                player.play("intro", wait=True)
                 player.play("setup", wait=True)
                 player.play_sequence(("upload", "transfer"))
                 player._sequence_thread.join(timeout=1)
@@ -182,6 +184,10 @@ class Esp32UploaderRecoveryTests(unittest.TestCase):
         )
         self.assertEqual(
             fake_winsound.PlaySound.call_args_list[3].args[1],
+            fake_winsound.SND_FILENAME | fake_winsound.SND_NODEFAULT,
+        )
+        self.assertEqual(
+            fake_winsound.PlaySound.call_args_list[4].args[1],
             fake_winsound.SND_FILENAME
             | fake_winsound.SND_NODEFAULT
             | fake_winsound.SND_ASYNC,

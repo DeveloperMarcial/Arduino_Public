@@ -24,6 +24,7 @@ video_narration/*.part
 # Local logs and generated output
 *.log
 .portenta-sim/
+docs/*.mp4
 
 # Local WiFi credentials for unattended PlatformIO builds
 .portenta_wifi.env

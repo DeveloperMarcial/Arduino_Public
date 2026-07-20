@@ -30,13 +30,12 @@ $rootFiles = @(
     ".gitignore",
     "Example Flash Sequence.txt",
     "partitions_arduino_nano_esp32.csv",
-    "Pinouts.drawio",
-    "Pinouts.png",
     "platformio.ini",
     "README.md",
     "THIRD_PARTY_NOTICES.md"
 )
 $includedDirectories = @(
+    "docs/",
     "examples/",
     "include/",
     "src/",
@@ -44,6 +43,7 @@ $includedDirectories = @(
     "tools/"
 )
 $narrationFiles = @(
+    "video_narration/Male_Voice00_codex_and_gpt.wav",
     "video_narration/Male_Voice01_setup_and_command.wav",
     "video_narration/Male_Voice02_uploader_and_staging.wav",
     "video_narration/Male_Voice02a_chunk_resume_and_verification.wav",
@@ -109,6 +109,21 @@ foreach ($relativePath in $filesToCopy) {
         New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
         Copy-Item -LiteralPath $sourcePath -Destination $destinationPath -Force
         $copiedCount += 1
+    }
+}
+
+$obsoleteRootFiles = @(
+    "Pinouts.drawio",
+    "Pinouts.png"
+)
+foreach ($relativePath in $obsoleteRootFiles) {
+    $obsoletePath = Join-Path $destinationRoot $relativePath
+    if (
+        -not (Test-Path -LiteralPath (Join-Path $sourceRoot $relativePath)) -and
+        (Test-Path -LiteralPath $obsoletePath -PathType Leaf) -and
+        $PSCmdlet.ShouldProcess($obsoletePath, "Remove obsolete judges file")
+    ) {
+        Remove-Item -LiteralPath $obsoletePath -Force
     }
 }
 

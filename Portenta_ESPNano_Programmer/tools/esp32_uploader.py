@@ -43,6 +43,7 @@ ARDUINO_NANO_ESP32_USB_ID = (0x2341, 0x0070)
 ESPRESSIF_USB_VENDOR_ID = 0x303A
 NARRATION_DIR = REPO_ROOT / "video_narration"
 NARRATION_FILES = {
+    "intro": "Male_Voice00_codex_and_gpt.wav",
     "setup": "Male_Voice01_setup_and_command.wav",
     "upload": "Male_Voice02_uploader_and_staging.wav",
     "transfer": "Male_Voice02a_chunk_resume_and_verification.wav",
@@ -1003,6 +1004,7 @@ def main() -> None:
         raise SystemExit("--resume requires --session-id")
 
     narration = NarrationPlayer(enabled=not args.no_narration)
+    narration.play("intro", wait=True)
     narration.play("setup", wait=True)
     total_started = time.perf_counter()
 
