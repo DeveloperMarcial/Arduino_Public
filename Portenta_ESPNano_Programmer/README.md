@@ -1,4 +1,4 @@
-# FlashBridge H7: Network-to-Silicon ESP32 Programming
+# FlashBridge: Network-to-Silicon ESP32 Programming
 
 *100% Prompt-Driven Application Code, Built with Codex & GPT-5.6.*
 
@@ -40,6 +40,9 @@ FlashBridge H7 existed before this collaboration, including its core product ide
   * The application code and supporting project files were produced and updated through iterative collaboration with Codex & GPT-5.6.
 * Codex performed all public-facing repository synchronization and Git operations, including creating the commits, writing the commit messages, and preparing the related repository comments.
 * Our only direct file editing was this root README.
+
+#### Actual Hardware Demonstration
+https://youtu.be/MSb_y7rtKms
 
 #### Full Upload Simulation
 
