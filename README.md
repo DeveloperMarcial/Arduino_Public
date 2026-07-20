@@ -4,7 +4,7 @@ Open-source embedded projects and community contributions by DeveloperMarcial, s
 
 ## Featured Project
 
-### [FlashBridge H7: Network-to-Silicon ESP32 Programming](Portenta_ESPNano_Programmer)
+### [FlashBridge: Network-to-Silicon ESP32 Programming](Portenta_ESPNano_Programmer)
 
 *Upload over Wi-Fi. Resume after interruption. Flash through UART. Verify every byte.*
 
