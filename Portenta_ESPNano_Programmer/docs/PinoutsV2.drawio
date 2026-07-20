@@ -67,43 +67,67 @@
     </mxGraphModel>
   </diagram>
   <diagram id="wMd1_xZf5l3V_QcnE44s" name="Page-2">
-    <mxGraphModel dx="764" dy="716" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="2416" dy="2169" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="jE21BXc8gixHAxkJ0RJe-1" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;" value="&lt;b&gt;&lt;u&gt;Desktop&lt;/u&gt;&lt;/b&gt;&lt;div&gt;&lt;b&gt;&lt;u&gt;Computer&lt;/u&gt;&lt;/b&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="80" width="80" x="110" y="360" as="geometry" />
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-1" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;fontSize=24;strokeColor=#0000FF;fontColor=#0000FF;strokeWidth=5;" value="&lt;b&gt;Desktop&lt;/b&gt;&lt;div&gt;&lt;b&gt;Computer&lt;/b&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="210" width="210" x="20" y="320" as="geometry" />
         </mxCell>
-        <mxCell id="jE21BXc8gixHAxkJ0RJe-2" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;" value="&lt;div&gt;&lt;u&gt;&lt;b&gt;Flash Programmer&lt;/b&gt;&lt;/u&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;Arduino&lt;div&gt;Portenta&lt;/div&gt;&lt;div&gt;H7&lt;/div&gt;" vertex="1">
-          <mxGeometry height="105" width="105" x="345" y="250" as="geometry" />
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-2" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;fontSize=24;fontColor=#CC00CC;strokeColor=#CC00CC;strokeWidth=5;" value="&lt;div&gt;&lt;b style=&quot;&quot;&gt;Flash Programmer&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;Arduino&lt;div&gt;Portenta&lt;/div&gt;&lt;div&gt;H7&lt;/div&gt;" vertex="1">
+          <mxGeometry height="210" width="210" x="425" y="290" as="geometry" />
         </mxCell>
-        <mxCell id="jE21BXc8gixHAxkJ0RJe-3" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;" value="&lt;b&gt;&lt;u&gt;Target&lt;/u&gt;&lt;/b&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Arduino&lt;/div&gt;&lt;div&gt;ESP32 Nano&lt;/div&gt;" vertex="1">
-          <mxGeometry height="80" width="80" x="560" y="367.5" as="geometry" />
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-3" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;fontSize=24;strokeColor=#009900;fontColor=#009900;strokeWidth=5;" value="&lt;b&gt;Target&lt;/b&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;Arduino&lt;/div&gt;&lt;div&gt;Nano ESP32&lt;/div&gt;" vertex="1">
+          <mxGeometry height="210" width="210" x="830" y="270" as="geometry" />
         </mxCell>
         <mxCell id="jE21BXc8gixHAxkJ0RJe-4" edge="1" parent="1" source="jE21BXc8gixHAxkJ0RJe-1" style="html=1;outlineConnect=0;fillColor=#CCCCCC;strokeColor=#6881B3;gradientColor=none;gradientDirection=north;strokeWidth=2;shape=mxgraph.networks.comm_link_edge;html=1;rounded=0;exitX=0.997;exitY=0.438;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.026;entryY=0.414;entryDx=0;entryDy=0;entryPerimeter=0;" target="jE21BXc8gixHAxkJ0RJe-6" value="">
           <mxGeometry height="100" relative="1" width="100" as="geometry">
-            <mxPoint x="210" y="330" as="sourcePoint" />
-            <mxPoint x="340" y="300" as="targetPoint" />
+            <mxPoint x="210" y="350" as="sourcePoint" />
+            <mxPoint x="340" y="320" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="jE21BXc8gixHAxkJ0RJe-5" connectable="0" parent="jE21BXc8gixHAxkJ0RJe-4" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="WiFi" vertex="1">
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-5" connectable="0" parent="jE21BXc8gixHAxkJ0RJe-4" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=24;" value="WiFi" vertex="1">
           <mxGeometry relative="1" x="-0.0124" y="5" as="geometry">
-            <mxPoint x="-13" y="-20" as="offset" />
+            <mxPoint x="18" y="-44" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="jE21BXc8gixHAxkJ0RJe-6" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;" value="&lt;div&gt;&lt;b&gt;&lt;u&gt;Shield&lt;/u&gt;&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;WiFi&lt;div&gt;and&lt;/div&gt;&lt;div&gt;Ethernet&lt;/div&gt;" vertex="1">
-          <mxGeometry height="105" width="105" x="345" y="355" as="geometry" />
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-6" parent="1" style="whiteSpace=wrap;html=1;aspect=fixed;fontSize=24;fontColor=#CC00CC;strokeColor=#CC00CC;strokeWidth=5;" value="&lt;div&gt;&lt;b&gt;Shield&lt;/b&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;Wi-Fi&lt;div&gt;and&lt;/div&gt;&lt;div&gt;Ethernet&lt;/div&gt;" vertex="1">
+          <mxGeometry height="210" width="210" x="425" y="500" as="geometry" />
         </mxCell>
-        <mxCell id="jE21BXc8gixHAxkJ0RJe-7" edge="1" parent="1" source="jE21BXc8gixHAxkJ0RJe-6" style="endArrow=none;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="jE21BXc8gixHAxkJ0RJe-3" value="">
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-7" edge="1" parent="1" source="jE21BXc8gixHAxkJ0RJe-6" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;endFill=1;" target="jE21BXc8gixHAxkJ0RJe-3" value="">
           <mxGeometry height="50" relative="1" width="50" as="geometry">
-            <mxPoint x="430" y="490" as="sourcePoint" />
-            <mxPoint x="480" y="440" as="targetPoint" />
+            <mxPoint x="430" y="510" as="sourcePoint" />
+            <mxPoint x="480" y="460" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="jE21BXc8gixHAxkJ0RJe-8" connectable="0" parent="jE21BXc8gixHAxkJ0RJe-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="/5" vertex="1">
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-8" connectable="0" parent="jE21BXc8gixHAxkJ0RJe-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=17;" value="/5" vertex="1">
           <mxGeometry relative="1" x="0.2868" y="-2" as="geometry">
-            <mxPoint as="offset" />
+            <mxPoint x="-13" y="-2" as="offset" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-9" parent="1" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;align=center;fontColor=#000000;fontSize=24;" value="&lt;h1 tabindex=&quot;-1&quot; class=&quot;heading-element&quot; dir=&quot;auto&quot; style=&quot;box-sizing: border-box; margin-right: 0px; margin-bottom: 16px; margin-left: 0px; line-height: 1.25; border-bottom: 1px solid rgba(209, 217, 224, 0.7); padding-bottom: 0.3em; font-family: &amp;quot;Mona Sans VF&amp;quot;, -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, &amp;quot;Noto Sans&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;; background-color: rgb(255, 255, 255); margin-top: 0px !important;&quot;&gt;&lt;u&gt;FlashBridge&lt;/u&gt;&lt;/h1&gt;&lt;h1 tabindex=&quot;-1&quot; class=&quot;heading-element&quot; dir=&quot;auto&quot; style=&quot;box-sizing: border-box; margin-right: 0px; margin-bottom: 16px; margin-left: 0px; line-height: 1.25; border-bottom: 1px solid rgba(209, 217, 224, 0.7); padding-bottom: 0.3em; font-family: &amp;quot;Mona Sans VF&amp;quot;, -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, &amp;quot;Noto Sans&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;; background-color: rgb(255, 255, 255); margin-top: 0px !important;&quot;&gt;Network-to-Silicon&lt;/h1&gt;&lt;h1 tabindex=&quot;-1&quot; class=&quot;heading-element&quot; dir=&quot;auto&quot; style=&quot;box-sizing: border-box; margin-right: 0px; margin-bottom: 16px; margin-left: 0px; line-height: 1.25; border-bottom: 1px solid rgba(209, 217, 224, 0.7); padding-bottom: 0.3em; font-family: &amp;quot;Mona Sans VF&amp;quot;, -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, &amp;quot;Noto Sans&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;; background-color: rgb(255, 255, 255); margin-top: 0px !important;&quot;&gt;&lt;font&gt;Wireless Programming&lt;/font&gt;&lt;/h1&gt;" vertex="1">
+          <mxGeometry height="320" width="1020" x="20" y="-140" as="geometry" />
+        </mxCell>
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-11" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=2;fontSize=24;strokeColor=#009900;fontColor=#009900;" value="&lt;div&gt;5-wire Programming Link&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;UART TX,&lt;/div&gt;&lt;div&gt;UART RX,&lt;/div&gt;&lt;div&gt;EN,&lt;/div&gt;&lt;div&gt;GPIO0 (RST),&lt;/div&gt;&lt;div&gt;GND&lt;/div&gt;" vertex="1">
+          <mxGeometry height="210" width="310" x="730" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-12" edge="1" parent="1" source="jE21BXc8gixHAxkJ0RJe-11" style="endArrow=diamondThin;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;endFill=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="490" y="550" as="sourcePoint" />
+            <mxPoint x="760" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=24;fontStyle=1" value="Desktop → Portenta → ESP32" vertex="1">
+          <mxGeometry height="30" width="1020" x="20" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="jE21BXc8gixHAxkJ0RJe-15" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=24;fontColor=#CC00CC;strokeColor=#CC00CC;fontStyle=2" value="HTTP server,&lt;div&gt;QSPI staging,&lt;/div&gt;&lt;div&gt;flash control,&amp;nbsp;&lt;/div&gt;&lt;div&gt;verification&lt;/div&gt;" vertex="1">
+          <mxGeometry height="200" width="210" x="425" y="750" as="geometry" />
+        </mxCell>
+        <mxCell id="K6IQRsC4BWSrvKsYvEhE-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=24;" value="&lt;em style=&quot;box-sizing: border-box; color: rgb(31, 35, 40); font-family: &amp;quot;Mona Sans VF&amp;quot;, -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, &amp;quot;Noto Sans&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;; text-align: start; background-color: rgb(255, 255, 255);&quot;&gt;100% Prompt-Driven Application Code, Built with Codex &amp;amp; GPT-5.6.&lt;/em&gt;" vertex="1">
+          <mxGeometry height="110" width="420" x="1120" y="-130" as="geometry" />
+        </mxCell>
+        <mxCell id="K6IQRsC4BWSrvKsYvEhE-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=24;" value="&lt;em style=&quot;box-sizing: border-box; color: rgb(31, 35, 40); font-family: &amp;quot;Mona Sans VF&amp;quot;, -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, &amp;quot;Noto Sans&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;; text-align: start; background-color: rgb(255, 255, 255);&quot;&gt;Securely Upload,&amp;nbsp;&lt;/em&gt;&lt;div&gt;&lt;em style=&quot;box-sizing: border-box; color: rgb(31, 35, 40); font-family: &amp;quot;Mona Sans VF&amp;quot;, -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, &amp;quot;Noto Sans&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;; text-align: start; background-color: rgb(255, 255, 255);&quot;&gt;Resume,&amp;nbsp;&lt;/em&gt;&lt;/div&gt;&lt;div&gt;&lt;em style=&quot;box-sizing: border-box; color: rgb(31, 35, 40); font-family: &amp;quot;Mona Sans VF&amp;quot;, -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, &amp;quot;Noto Sans&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;; text-align: start; background-color: rgb(255, 255, 255);&quot;&gt;Flash,&lt;/em&gt;&lt;/div&gt;&lt;div&gt;&lt;em style=&quot;box-sizing: border-box; color: rgb(31, 35, 40); font-family: &amp;quot;Mona Sans VF&amp;quot;, -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, &amp;quot;Noto Sans&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;; text-align: start; background-color: rgb(255, 255, 255);&quot;&gt;and&lt;/em&gt;&lt;/div&gt;&lt;div&gt;&lt;em style=&quot;box-sizing: border-box; color: rgb(31, 35, 40); font-family: &amp;quot;Mona Sans VF&amp;quot;, -apple-system, BlinkMacSystemFont, &amp;quot;Segoe UI&amp;quot;, &amp;quot;Noto Sans&amp;quot;, Helvetica, Arial, sans-serif, &amp;quot;Apple Color Emoji&amp;quot;, &amp;quot;Segoe UI Emoji&amp;quot;; text-align: start; background-color: rgb(255, 255, 255);&quot;&gt;Verify&lt;/em&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="190" width="410" x="1120" y="280" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

@@ -1,4 +1,4 @@
-# FlashBridge H7: AES-Secured Network-to-Silicon ESP32 Programming
+# FlashBridge H7: Network-to-Silicon ESP32 Programming
 
 *100% Prompt-Driven Application Code, Built with Codex & GPT-5.6.*
 
@@ -11,6 +11,165 @@ hardware.
 ---
 
 *Securely Upload, Resume, Flash, and Verify.*
+
+## Desktop Simulator Simulator for Judges of the OpenAI Build Week(the “Hackathon”)
+
+### Improvements Made with Codex & GPT-5.6
+FlashBridge H7 existed before this collaboration, including its core product idea, hardware architecture, and physical Portenta-to-ESP32 programming workflow. We used Codex & GPT-5.6 as an implementation partner to turn that foundation into a more reliable, testable, recoverable, and judge-ready system.
+
+**How we collaborated:** We provided the goals, constraints, hardware knowledge, acceptance criteria, and repeated feedback from real-device testing. Before making changes, Codex inspected the existing C++ firmware, Python uploader, HTTP protocol, build configuration, and documentation. GPT-5.6 helped reason across those components, preserve protocol compatibility, identify failure modes, and translate our requests into implementation steps. Codex then made the repository changes directly, ran tests and end-to-end exercises, diagnosed failures, refined the implementation, synchronized the judge repository, and managed the requested Git workflow.
+
+**Where Codex accelerated the work:**
+
+* Built a persistent PC-based Portenta simulator that reproduces the existing session, manifest, chunk-upload, resume, flash-progress, and verification protocol without simplifying the real uploader.
+* Created automated success and failure coverage for flashing, corrupted chunks, missing chunks, resume across restarts, invalid manifests, known-session recovery, and failed verification.
+* Strengthened the uploader with connection-loss detection, exact resume commands containing the real session ID, operation timing, completion states, and clear recovery output.
+* Added Windows detection of the Arduino Nano ESP32 COM port and monitoring of its expected disconnect and reappearance during programming.
+* Expanded the judge documentation with simulator instructions, timeout behavior, IP-address discovery, resume and full-erase scenarios, physical-hardware limitations, and reproducible demo commands.
+* Built and maintained export tooling that synchronizes the hardware master with the reduced public judge repository while excluding credentials, local models, caches, and oversized generated files.
+* Helped shape the project title, tagline, elevator pitch, use cases, and the distinction between implemented functionality and planned AES protection.
+* Drafted and refined the submission-video narration, generated synthetic voice assets, integrated timed narration cues into the uploader, and post-processed the final video with fast-forward sections and an opening architecture diagram.
+
+**Our key decisions:** We selected the problem, boards, wiring, pin mapping, target behavior, network workflow, and requirement to keep the real HTTP protocol unchanged. We decided which recovery behavior judges should see, how resume and verification should be presented, which simulator operations must be clearly labeled, and how the project should be positioned. We also performed the physical wiring, Portenta and Nano ESP32 tests, observed USB behavior, reviewed the user-visible results, and requested refinements until the system behaved as intended.
+
+**Final result:** Codex & GPT-5.6 contributed the cross-repository analysis, implementation, tests, debugging, documentation support, narration workflow, video processing, synchronization, and Git execution. We validated the result through 21 automated tests, simulator exercises, hash verification, interrupted-upload recovery, and a narrated physical-hardware demonstration.
+
+* Our review was outcome- and risk-focused rather than a line-by-line inspection of every generated implementation detail.
+* We estimate that we directly reviewed approximately 10% of the code.
+  * This is similar to **trusting a modern compiler without reviewing all generated assembly code**: define the required behavior, test the outputs, investigate failures, and validate the result in its real operating environment.
+  * The application code and supporting project files were produced and updated through iterative collaboration with Codex & GPT-5.6.
+* Codex performed all public-facing repository synchronization and Git operations, including creating the commits, writing the commit messages, and preparing the related repository comments.
+* Our only direct file editing was this root README.
+
+#### Full Upload Simulation
+
+`tools/portenta_sim.py` implements the same HTTP routes and status fields as the Portenta firmware so the existing uploader can be demonstrated without hardware. It uses only the Python standard library. Start it from the repository root:
+
+```powershell
+# Start Simulator App
+python tools/portenta_sim.py --host 127.0.0.1 --port 8080
+```
+
+Without `--storage`, staged data is placed in a temporary directory and safely removed when the simulator exits. Use a persistent directory to demonstrate resume across restarts:
+
+```powershell
+# Start Simulator App with Storage
+python tools/portenta_sim.py --host 127.0.0.1 --port 8080 --storage .portenta-sim --flash-delay 0.4
+```
+
+The startup banner, HTTP details, root health response, and status details are labeled `SIMULATION`. `GET /health` and `GET /api/v1/device` also return `"simulation": true`. `GET /api/v1/sessions` lists every known persisted session ID and its state. Persisted sessions older than seven days are cleaned up at startup by default; set `--session-max-age 0` to retain them indefinitely. Use `--fail-verification firmware.bin` (or `*`) to demonstrate a failed ESP flash readback check.
+
+Run the existing uploader unchanged apart from targeting localhost:
+
+```powershell
+# FULL UPLOAD: This performs a complete simulated upload.
+
+# Generic Upload
+python tools/esp32_uploader.py `
+  --host 127.0.0.1 --port 8080 `
+  --target arduino_nano_esp32 --baud 460800 `
+  --image bootloader:path\to\bootloader.bin `
+  --image partitions:path\to\partitions.bin `
+  --image app0:path\to\firmware.bin
+
+# This Repo: 3 Blinks: 1 long, then 2 short
+python tools/esp32_uploader.py `
+  --host 127.0.0.1 --port 8080 `
+  --target arduino_nano_esp32 --baud 460800 `
+  --image bootloader:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bootloader.bin `
+  --image partitions:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.partitions.bin `
+  --image app0:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bin
+
+# This Repo: Upload other Arduino App: 3 Fast Blinks
+python tools/esp32_uploader.py `
+  --host 127.0.0.1 --port 8080 `
+  --target arduino_nano_esp32 --baud 460800 `
+  --image bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin `
+  --image partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin `
+  --image app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin
+```
+
+The simulator validates image names, offsets, flash bounds, chunk indexes and exact chunk lengths. Once all chunks arrive, it verifies each staged SHA-256. Flashable images are written at their manifest offsets in `.portenta-sim\flash\<target>.bin`, then read back to produce the same `staged_md5`, `flash_md5`, and `flash_verified` fields as the device.
+
+#### Resume Upload Simulation
+
+1. Start the persistent simulator:
+
+   ```powershell
+   # RESUME UPLOAD: This performs a simulated interrupted upload.
+
+   # Open PowerShell (Terminal_1):
+   # cd <repo_root>
+   python tools/portenta_sim.py --host 127.0.0.1 --port 8080 --storage .portenta-sim --flash-delay 0.4
+   ```
+
+2. In another PowerShell terminal, run the complete uploader command below. While it displays `image chunk upload started...`, press `Ctrl+Break` to simulate an interrupted upload. Keep the simulator running in the first terminal and note the real session ID and resume command printed by the uploader.
+
+   ```powershell
+   # Open Another PowerShell (Terminal_2):
+   # cd <repo_root>
+   python tools/esp32_uploader.py `
+     --host 127.0.0.1 --port 8080 `
+     --target arduino_nano_esp32 --baud 460800 `
+     --chunk-size 1024 `
+     --poll-interval 0.5 `
+     --image 'bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin' `
+     --image 'partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin' `
+     --image 'app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin'
+
+   # When you see "image chunk upload started...", press `Ctrl+Break`.
+   ```
+
+3. The simulator in Terminal_1 is now terminated. Then start another upload with the same persistent storage:
+
+   ```powershell
+   # In Terminal_1:
+   python tools/portenta_sim.py --host 127.0.0.1 --port 8080 --storage .portenta-sim --flash-delay 0.4
+   ```
+
+4. Run the exact resume command printed by the uploader after `Ctrl+Break`. It contains the real session ID from step 2 and has this complete form:
+
+   ```powershell
+   # NOTE: In Terminal_2 you will see the following command. Complete with Session-Id.
+   # In Terminal_2:
+   python tools/esp32_uploader.py `
+     --host 127.0.0.1 --port 8080 `
+     --target arduino_nano_esp32 --baud 460800 `
+     --chunk-size 1024 `
+     --poll-interval 0.5 `
+     --session-id sess-xxxxxxxx `
+     --resume `
+     --image 'bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin' `
+     --image 'partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin' `
+     --image 'app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin'
+   ```
+
+   In the example above, replace `sess-xxxxxxxx` with the actual session ID printed in step 2. The uploader validates the stored manifest, queries each `received` chunk bitmap, sends only missing chunks, and starts the simulated flash.
+
+5. Watch `flashing` progress details followed by `completed`.
+* The uploader prints matching `staged_md5` and `flash_md5` values with `flash_verified=True`.
+* Re-run the uploader and allow it to finish.
+  * You will see the "total time" is longer verifying the _resume_ option works.
+
+Run the automated simulator checks with:
+
+```powershell
+python tools/run_tests.py
+or
+python -m unittest discover -s tests -v
+```
+
+`unittest` is Python's built-in testing framework, so a separate test framework
+such as `pytest` is not required. `tools/run_tests.py`:
+
+- discovers test modules and test cases under `tests`
+- uses verbose output so every test reports `ok`, `FAIL`, or `ERROR`
+- preserves a failing exit code for automation
+- ends with a concise result such as `11 of 11 PASSED`
+
+These tests start local simulator servers on temporary ports, use temporary storage directories, exercise upload, resume, validation, failure, session-listing, and flash-verification behavior, then clean up their temporary resources. They do not contact a physical Portenta or ESP32 and do not flash real hardware. A successful run ends with `OK` and the pass-count summary; failures include a traceback identifying the failed test and assertion.
+
+The simulator models local staging, interrupted upload/resume, erase metadata acceptance, ESP flash address ranges, progress, and digest verification. It does **not** access QSPI, toggle Portenta `EN`/`GPIO0`, communicate over UART, enter an ESP ROM bootloader, run a real stub erase, verify electrical wiring, or flash physical Portenta/ESP32 hardware. Those operations require the actual boards.
 
 ## Use Cases
 
@@ -75,6 +234,12 @@ This project provides a [PlatformIO](https://docs.platformio.org/en/latest/integ
 ## Hardware Mapping
 
 Recommended [Portenta wiring](docs/Pinouts.png) when the `Portenta Vision Shield Ethernet` is attached:
+
+Hardware photos:
+
+* [ESP32 Nano wiring](docs/ESP32%20Nano%20Wiring.jpg)
+* [Portenta wiring](docs/Portenta%20Wiring.jpg)
+* [Complete test setup](docs/TestSetup.jpg)
 
 Portenta H7 (USB Up)                                    Arduino Nano ESP32 (USB Up)
 ----------------------------------------------------    ---------------------------------------------------
@@ -155,132 +320,6 @@ Portenta firmware timing:
 | ESP flash MD5 readback | At least 3 seconds, scaled at 8 seconds per MB |
 
 If a normal uploader request times out after a session ID has been received, the uploader prints a phase-appropriate retry or resume command. A flash-request timeout does not necessarily mean flashing failed: the uploader first queries session status and continues polling when the Portenta reports `flashing`, `completed`, or `failed`.
-
-## PC Simulator for Judges
-
-`tools/portenta_sim.py` implements the same HTTP routes and status fields as the Portenta firmware so the existing uploader can be demonstrated without hardware. It uses only the Python standard library. Start it from the repository root:
-
-```powershell
-# Start Simulator App
-python tools/portenta_sim.py --host 127.0.0.1 --port 8080
-```
-
-Without `--storage`, staged data is placed in a temporary directory and safely removed when the simulator exits. Use a persistent directory to demonstrate resume across restarts:
-
-```powershell
-# Start Simulator App with Storage
-python tools/portenta_sim.py --host 127.0.0.1 --port 8080 --storage .portenta-sim --flash-delay 0.4
-```
-
-The startup banner, HTTP details, root health response, and status details are labeled `SIMULATION`. `GET /health` and `GET /api/v1/device` also return `"simulation": true`. `GET /api/v1/sessions` lists every known persisted session ID and its state. Persisted sessions older than seven days are cleaned up at startup by default; set `--session-max-age 0` to retain them indefinitely. Use `--fail-verification firmware.bin` (or `*`) to demonstrate a failed ESP flash readback check.
-
-Run the existing uploader unchanged apart from targeting localhost:
-
-```powershell
-# Generic Upload
-python tools/esp32_uploader.py `
-  --host 127.0.0.1 --port 8080 `
-  --target arduino_nano_esp32 --baud 460800 `
-  --image bootloader:path\to\bootloader.bin `
-  --image partitions:path\to\partitions.bin `
-  --image app0:path\to\firmware.bin
-
-# This Repo: 3 Blinks: 1 long, then 2 short
-python tools/esp32_uploader.py `
-  --host 127.0.0.1 --port 8080 `
-  --target arduino_nano_esp32 --baud 460800 `
-  --image bootloader:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bootloader.bin `
-  --image partitions:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.partitions.bin `
-  --image app0:.\images\9ADE7FFE281152CE1367D725B05AA39B\Blinky_1000ms.ino.bin
-	
-# This Repo: Upload other Arduino App: 3 Fast Blinks
-python tools/esp32_uploader.py `
-  --host 127.0.0.1 --port 8080 `
-  --target arduino_nano_esp32 --baud 460800 `
-  --image bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin `
-  --image partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin `
-  --image app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin
-```
-
-The simulator validates image names, offsets, flash bounds, chunk indexes and exact chunk lengths. Once all chunks arrive, it verifies each staged SHA-256. Flashable images are written at their manifest offsets in `.portenta-sim\flash\<target>.bin`, then read back to produce the same `staged_md5`, `flash_md5`, and `flash_verified` fields as the device.
-
-### Short Judge Demo
-
-1. Start the persistent simulator:
-
-   ```powershell
-   # Open PowerShell (Terminal_1):
-   # cd <repo_root>
-   python tools/portenta_sim.py --host 127.0.0.1 --port 8080 --storage .portenta-sim --flash-delay 0.4
-   ```
-
-2. In another PowerShell terminal, run the complete uploader command below. While it displays `image chunk upload started...`, press `Ctrl+Break` to simulate an interrupted upload. Keep the simulator running in the first terminal and note the real session ID and resume command printed by the uploader.
-
-   ```powershell
-   # Open Another PowerShell (Terminal_2):
-   # cd <repo_root>
-   python tools/esp32_uploader.py `
-     --host 127.0.0.1 --port 8080 `
-     --target arduino_nano_esp32 --baud 460800 `
-     --chunk-size 1024 `
-     --poll-interval 0.5 `
-     --image 'bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin' `
-     --image 'partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin' `
-     --image 'app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin'
-
-   # When you see "image chunk upload started...", press `Ctrl+Break`.
-   ```
-
-3. The simulator in Terminal_1 is now terminated. Then start another upload with the same persistent storage:
-
-   ```powershell
-   # In Terminal_1:
-   python tools/portenta_sim.py --host 127.0.0.1 --port 8080 --storage .portenta-sim --flash-delay 0.4
-   ```
-
-4. Run the exact resume command printed by the uploader after `Ctrl+Break`. It contains the real session ID from step 2 and has this complete form:
-
-   ```powershell
-   # NOTE: In Terminal_2 you will see the following command. Complete with Session-Id.
-   # In Terminal_2:
-   python tools/esp32_uploader.py `
-     --host 127.0.0.1 --port 8080 `
-     --target arduino_nano_esp32 --baud 460800 `
-     --chunk-size 1024 `
-     --poll-interval 0.5 `
-     --session-id sess-xxxxxxxx `
-     --resume `
-     --image 'bootloader:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bootloader.bin' `
-     --image 'partitions:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.partitions.bin' `
-     --image 'app0:.\images\A6205501DBB2B531B3C95BA725DCEFF2\Blinky_500ms.ino.bin'
-   ```
-
-   In the example above, replace `sess-xxxxxxxx` with the actual session ID printed in step 2. The uploader validates the stored manifest, queries each `received` chunk bitmap, sends only missing chunks, and starts the simulated flash.
-
-5. Watch `flashing` progress details followed by `completed`.
-* The uploader prints matching `staged_md5` and `flash_md5` values with `flash_verified=True`.
-* Re-run the uploader and allow it to finish.
-  * You will see the "total time" is longer verifying the _resume_ option works.
-
-Run the automated simulator checks with:
-
-```powershell
-python tools/run_tests.py
-or
-python -m unittest discover -s tests -v
-```
-
-`unittest` is Python's built-in testing framework, so a separate test framework
-such as `pytest` is not required. `tools/run_tests.py`:
-
-- discovers test modules and test cases under `tests`
-- uses verbose output so every test reports `ok`, `FAIL`, or `ERROR`
-- preserves a failing exit code for automation
-- ends with a concise result such as `11 of 11 PASSED`
-
-These tests start local simulator servers on temporary ports, use temporary storage directories, exercise upload, resume, validation, failure, session-listing, and flash-verification behavior, then clean up their temporary resources. They do not contact a physical Portenta or ESP32 and do not flash real hardware. A successful run ends with `OK` and the pass-count summary; failures include a traceback identifying the failed test and assertion.
-
-The simulator models local staging, interrupted upload/resume, erase metadata acceptance, ESP flash address ranges, progress, and digest verification. It does **not** access QSPI, toggle Portenta `EN`/`GPIO0`, communicate over UART, enter an ESP ROM bootloader, run a real stub erase, verify electrical wiring, or flash physical Portenta/ESP32 hardware. Those operations require the actual boards.
 
 ### ESP ROM Notes
 
@@ -748,6 +787,16 @@ Use the exact Nano ESP32 files generated by Arduino IDE or Arduino CLI. The symb
 The uploader is HTTP-based; your PC must be able to reach the Portenta over the network.
 
 The final console output prints per-image flash verification results from the Portenta.
+
+## Lessons Learned
+We learned that Codex can be an extraordinarily strong programming partner, especially when the work involves broad software knowledge, protocol handling, hashing, validation logic, and iterative refactoring. In many areas, it accelerated implementation far beyond what we could have done alone at the same speed.
+
+We also learned where AI agents still need strong human guidance. Datasheet interpretation, hardware pinout reconciliation, and board-level assumptions still benefit heavily from a human who can cross-check physical reality. More broadly, we learned that AI works best when paired with founder-market fit: someone close to the problem, close to the users, and able to provide the judgment, ordering, and constraints that turn generated code into a dependable product.
+
+The Arduino Nano ESP32 layout places power and ground pins directly opposite the UART pins. Strict adherence to pinout diagrams is required during wiring, as accidental reversal causes catastrophic thermal failure and melted components.
+![Melted wire discovered during physical hardware testing](docs/MeltedWire.jpg)
+
+*A heat-damaged jumper connection discovered during hardware testing: a practical reminder that pinouts, voltage assumptions, and physical wiring must always be verified on the real hardware.*
 
 ## Current Status
 
