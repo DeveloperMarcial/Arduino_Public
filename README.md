@@ -2,6 +2,8 @@
 
 Open-source embedded projects and community contributions by DeveloperMarcial, sharing practical software, hardware designs, tools, documentation, and tested examples. More projects are coming soon.
 
+Running Machine Learning on Arduino [more repos here](https://github.com/DeveloperMarcial/Edge_Impulse/tree/trunk/Arduino_EdgeImpulse)
+
 ## Featured Project
 
 ### [FlashBridge: Network-to-Silicon ESP32 Programming](Portenta_ESPNano_Programmer)
