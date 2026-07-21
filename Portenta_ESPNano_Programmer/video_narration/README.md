@@ -81,9 +81,8 @@ from Git and judge exports because they exceed GitHub's normal file-size limit.
 
 ## Licensing
 
-The voice is synthetic output from Piper's `en_US-libritts-high` model, not a
-recording commissioned from its source readers. Do not state or imply that
-Brett W. Downey or another LibriTTS reader narrated or endorsed this project.
+The narration was synthesized using Piper and the `en_US-libritts-high` model;
+no source reader participated in or endorsed this project.
 
 Piper is an external GPLv3 generation tool and is not vendored here. The model
 was trained from scratch on LibriTTS `train-clean-360`, licensed under Creative

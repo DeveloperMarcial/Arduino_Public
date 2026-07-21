@@ -281,9 +281,9 @@ This project turns an Arduino Portenta H7 into a network-connected, production-s
 Why it rocks: this is not a fire-and-forget uploader. Transfers are chunked, hash-checked, and resumable after an interruption. Staged images are verified with SHA-256, flashed images are read back and verified with MD5, and every phase exposes useful progress and errors. The same uploader works over Ethernet or WiFi, while the included PC simulator lets judges exercise sessions, resume, flashing, and verification without owning either board.
 
 Arduino Portenta H7: The WiFi RXer and ESP32 Nano programmer
-* $115 [Buy It](https://store-usa.arduino.cc/products/portenta-h7])
+* $115 [Buy It](https://store-usa.arduino.cc/products/portenta-h7)
 * $50 [Wifi/Ethernet Shield](https://store-usa.arduino.cc/products/portenta-vision-shield-ethernet?_pos=1&_psq=AVX00039+OR+ASX00031+OR+ASX00027+OR+ASX00021&_psid=a54aa7f3a&_ss=e&_v=1.0)
-* [Datasheet](https://www.st.com/resource/en/datasheet/stm32h747xi.pdf)
+* [Datasheet](https://www.st.com/resource/en/datasheet/stm32h747xg.pdf)
 * [Schematic](https://content.arduino.cc/assets/Pinout-PortentaH7_latest.pdf)
 
 Arduino Nano (ESP32): The target we want to remotely program
@@ -886,10 +886,9 @@ MD5 verification, and reboot back to normal boot.
 
 The meaningful remaining gaps are:
 
-1. Hardware-verify resumed uploads and baud-rate switching on the actual Portenta + Arduino Nano ESP32 wiring.
-2. Hardware-verify the target-aware stub-assisted `--erase` flow on the actual Portenta + Arduino Nano ESP32 wiring.
-3. Consider whether you want to persist the post-flash verification record beyond the live session status API, for example in QSPI logs or a downloadable audit artifact.
-4. Create a solution to save WiFi credentials into an encrypted file and then have platformio.ini consume that encrypted file instead of saving credentials in plain open ASCII text. 
+1. Hardware-verify the target-aware stub-assisted `--erase` flow on the actual Portenta + Arduino Nano ESP32 wiring.
+2. Consider whether you want to persist the post-flash verification record beyond the live session status API, for example in QSPI logs or a downloadable audit artifact.
+3. Create a solution to save WiFi credentials into an encrypted file and then have platformio.ini consume that encrypted file instead of saving credentials in plain open ASCII text. However, this encrypted-file feature is unnecessary unless you specifically need unattended builds with encrypted credentials at rest. What we have now is WiFi credentials being entered through a hidden compile-time prompt, avoiding credentials in platformio.ini and tracked files.
 
 ## License
 
